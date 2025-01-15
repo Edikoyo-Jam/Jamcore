@@ -19,5 +19,8 @@ services:
       - 127.0.0.1:3005:3005
     depends_on:
       - postgres
+    entrypoint: >
+      sh -c "until pg_isready -h postgres -p 5432; do echo 'Waiting for database...'; sleep 2; done;
+             npx prisma migrate deploy && npm start"
 volumes:
   postgres_data:
