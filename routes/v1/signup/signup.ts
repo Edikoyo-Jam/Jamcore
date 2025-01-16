@@ -1,7 +1,7 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
-import { checkPasswordHash } from "../../../helper/password";
+import { hashPassword } from "../../../helper/password";
 
 const prisma = new PrismaClient();
 var router = express.Router();
@@ -21,14 +21,8 @@ router.post("/", async function (req, res) {
     },
   });
 
-  if (!user) {
-    res.status(401);
-    res.send();
-    return;
-  }
-
-  if (!(await checkPasswordHash(password, user.password))) {
-    res.status(401);
+  if (user) {
+    res.status(409);
     res.send();
     return;
   }
@@ -39,7 +33,15 @@ router.post("/", async function (req, res) {
     return;
   }
 
-  const token = jwt.sign({ name: user.slug }, process.env.TOKEN_SECRET, {
+  await prisma.user.create({
+    data: {
+      slug: username.toLowerCase().replace(" ", "_"),
+      name: username,
+      password: await hashPassword(password),
+    },
+  });
+
+  const token = jwt.sign({ name: username }, process.env.TOKEN_SECRET, {
     expiresIn: "1800s",
   });
 
