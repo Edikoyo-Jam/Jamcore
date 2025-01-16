@@ -8,6 +8,7 @@ const port = 3005;
 const app = express();
 
 app.use(cors());
+app.use(express.json());
 
 app.use("/api/v1", v1);
 
