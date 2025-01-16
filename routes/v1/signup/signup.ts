@@ -15,13 +15,13 @@ router.post("/", async function (req, res) {
     return;
   }
 
-  const user = await prisma.user.findUnique({
+  const conflictuser = await prisma.user.findUnique({
     where: {
       slug: (username as string).toLowerCase(),
     },
   });
 
-  if (user) {
+  if (conflictuser) {
     res.status(409);
     res.send();
     return;
@@ -33,7 +33,7 @@ router.post("/", async function (req, res) {
     return;
   }
 
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       slug: username.toLowerCase().replace(" ", "_"),
       name: username,
@@ -45,7 +45,14 @@ router.post("/", async function (req, res) {
     expiresIn: "1800s",
   });
 
-  res.json(token);
+  res.json({
+    token: token,
+    user: {
+      slug: user.slug,
+      name: user.name,
+      profilePicture: user.profilePicture,
+    },
+  });
 });
 
 export default router;

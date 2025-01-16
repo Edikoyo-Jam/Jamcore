@@ -43,7 +43,14 @@ router.post("/", async function (req, res) {
     expiresIn: "1800s",
   });
 
-  res.json(token);
+  res.json({
+    token: token,
+    user: {
+      slug: user.slug,
+      name: user.name,
+      profilePicture: user.profilePicture,
+    },
+  });
 });
 
 export default router;

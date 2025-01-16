@@ -1,13 +1,21 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import { PrismaClient } from "@prisma/client";
 
+const prisma = new PrismaClient();
 var router = express.Router();
 
 router.get("/", async function (req, res) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
+  const { username } = req.query;
 
   if (token == null) {
+    res.status(401);
+    res.send();
+    return;
+  }
+  if (!username) {
     res.status(401);
     res.send();
     return;
@@ -18,10 +26,16 @@ router.get("/", async function (req, res) {
     return;
   }
 
-  jwt.verify(token, process.env.TOKEN_SECRET, (err: any, user: any) => {
+  jwt.verify(token, process.env.TOKEN_SECRET, async (err: any) => {
     if (err) return res.status(403);
 
-    res.send("ok");
+    const user = await prisma.user.findUnique({
+      where: {
+        slug: username as string,
+      },
+    });
+
+    res.send(JSON.stringify(user));
   });
 });
 
