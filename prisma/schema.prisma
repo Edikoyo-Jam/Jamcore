@@ -15,19 +15,22 @@ datasource db {
 }
 
 model User {
-  id              Int       @id @default(autoincrement())
-  slug            String    @unique
-  name            String
-  email           String?   @unique
-  password        String
-  profilePicture  String?
-  bio             String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                Int       @id @default(autoincrement())
+  slug              String    @unique
+  name              String
+  email             String?   @unique
+  password          String
+  profilePicture    String?
+  bio               String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   // Relations
-  posts           Post[]    @relation(name: "PostToAuthor")
-  postLike        Post[]
+  posts             Post[]    @relation(name: "PostToAuthor")
+  postLike          Post[]
+  ownedGames        Game[]    @relation(name: "GameToAuthor")
+  contributedGames  Game[]
+  jams              Jam[]
 }
 
 model Flair {
@@ -51,4 +54,35 @@ model Post {
   authorId  Int
   flairs    Flair[]
   likers    User[]
+}
+
+model Jam {
+  id              Int       @id @default(autoincrement())
+  name            String
+  startTime       DateTime  @default(now())
+  ratingHours     Int
+  slaughterHours  Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  games           Game[]    @relation(name: "GameToEvent")
+  users           User[]
+}
+
+model Game {
+  id            Int       @id @default(autoincrement())
+  slug          String
+  name          String
+  description   String?
+  thumbnail     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  author        User      @relation(fields: [authorId], references: [id], name: "GameToAuthor")
+  authorId      Int
+  contributors  User[]
+  jam           Jam       @relation(fields: [jamId], references: [id], name: "GameToEvent")
+  jamId         Int
 }

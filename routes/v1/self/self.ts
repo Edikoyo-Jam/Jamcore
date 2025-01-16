@@ -38,6 +38,9 @@ router.get("/", async function (req, res) {
       where: {
         slug: username as string,
       },
+      include: {
+        jams: true,
+      },
     });
 
     if (!user) {
