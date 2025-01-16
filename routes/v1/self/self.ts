@@ -27,13 +27,24 @@ router.get("/", async function (req, res) {
   }
 
   jwt.verify(token, process.env.TOKEN_SECRET, async (err: any) => {
-    if (err) return res.status(403);
+    if (err) {
+      console.error(err);
+      res.status(403);
+      res.send();
+      return;
+    }
 
     const user = await prisma.user.findUnique({
       where: {
         slug: username as string,
       },
     });
+
+    if (!user) {
+      res.status(403);
+      res.send();
+      return;
+    }
 
     res.send(JSON.stringify(user));
   });
