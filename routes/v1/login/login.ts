@@ -39,18 +39,24 @@ router.post("/", async function (req, res) {
     return;
   }
 
-  const token = jwt.sign({ name: user.slug }, process.env.TOKEN_SECRET, {
-    expiresIn: "1800s",
+  const accessToken = jwt.sign({ name: user.slug }, process.env.TOKEN_SECRET, {
+    expiresIn: "1h",
   });
 
-  res.json({
-    token: token,
-    user: {
-      slug: user.slug,
-      name: user.name,
-      profilePicture: user.profilePicture,
-    },
+  const refreshToken = jwt.sign({ name: user.slug }, process.env.TOKEN_SECRET, {
+    expiresIn: "1d",
   });
+
+  res
+    .cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      sameSite: "strict",
+    })
+    .header("Authorization", accessToken)
+    .send({
+      user: user,
+      token: accessToken,
+    });
 });
 
 export default router;

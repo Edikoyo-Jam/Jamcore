@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 import v1 from "./routes/v1/v1.js";
 
@@ -7,7 +8,18 @@ const port = 3005;
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? "https://d2jam.com"
+        : "http://localhost:3070",
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Authorization"],
+  })
+);
+app.use(cookieParser());
 app.use(express.json());
 
 app.use("/api/v1", v1);

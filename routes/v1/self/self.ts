@@ -7,10 +7,16 @@ var router = express.Router();
 
 router.get("/", async function (req, res) {
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+  const refreshToken = req.cookies["refreshToken"];
+  const accessToken = authHeader && authHeader.split(" ")[1];
   const { username } = req.query;
 
-  if (token == null) {
+  if (accessToken == null) {
+    res.status(401);
+    res.send();
+    return;
+  }
+  if (refreshToken == null) {
     res.status(401);
     res.send();
     return;
@@ -26,31 +32,52 @@ router.get("/", async function (req, res) {
     return;
   }
 
-  jwt.verify(token, process.env.TOKEN_SECRET, async (err: any) => {
-    if (err) {
-      console.error(err);
-      res.status(403);
-      res.send();
-      return;
+  let decoded;
+
+  try {
+    decoded = jwt.verify(accessToken, process.env.TOKEN_SECRET);
+  } catch (error) {
+    if (!refreshToken) {
+      return res.status(401).send("Access Denied. No refresh token provided.");
     }
 
-    const user = await prisma.user.findUnique({
-      where: {
-        slug: username as string,
-      },
-      include: {
-        jams: true,
-      },
-    });
+    try {
+      decoded = jwt.verify(refreshToken, process.env.TOKEN_SECRET);
+      const accessToken = jwt.sign(
+        { user: username },
+        process.env.TOKEN_SECRET,
+        {
+          expiresIn: "1h",
+        }
+      );
 
-    if (!user) {
-      res.status(403);
-      res.send();
-      return;
+      res
+        .cookie("refreshToken", refreshToken, {
+          httpOnly: true,
+          sameSite: "strict",
+        })
+        .header("Authorization", accessToken);
+    } catch (error) {
+      return res.status(400).send("Invalid Token.");
     }
+  }
 
-    res.send(JSON.stringify(user));
+  const user = await prisma.user.findUnique({
+    where: {
+      slug: username as string,
+    },
+    include: {
+      jams: true,
+    },
   });
+
+  if (!user) {
+    res.status(403);
+    res.send();
+    return;
+  }
+
+  res.send(JSON.stringify(user));
 });
 
 export default router;
