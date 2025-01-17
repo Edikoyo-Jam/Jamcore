@@ -32,17 +32,17 @@ router.get("/", async function (req, res) {
     return;
   }
 
-  let decoded;
-
   try {
-    decoded = jwt.verify(accessToken, process.env.TOKEN_SECRET);
+    jwt.verify(accessToken, process.env.TOKEN_SECRET);
   } catch (error) {
     if (!refreshToken) {
-      return res.status(401).send("Access Denied. No refresh token provided.");
+      res.status(401);
+      res.send("Access Denied. No refresh token provided.");
+      return;
     }
 
     try {
-      decoded = jwt.verify(refreshToken, process.env.TOKEN_SECRET);
+      jwt.verify(refreshToken, process.env.TOKEN_SECRET);
       const accessToken = jwt.sign(
         { user: username },
         process.env.TOKEN_SECRET,
@@ -58,7 +58,9 @@ router.get("/", async function (req, res) {
         })
         .header("Authorization", accessToken);
     } catch (error) {
-      return res.status(400).send("Invalid Token.");
+      res.status(400);
+      res.send("Invalid Token.");
+      return;
     }
   }
 
