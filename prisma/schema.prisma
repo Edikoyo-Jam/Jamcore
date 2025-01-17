@@ -86,3 +86,13 @@ model Game {
   jam           Jam       @relation(fields: [jamId], references: [id], name: "GameToEvent")
   jamId         Int
 }
+
+model FeaturedStreamer {
+  id           Int      @id @default(autoincrement()) 
+  userName     String   
+  thumbnailUrl String   
+  streamTitle  String   
+  streamTags   String[] @default([])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

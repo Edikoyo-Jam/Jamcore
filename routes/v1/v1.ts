@@ -8,6 +8,7 @@ import self from "./self/self.js";
 import signup from "./signup/signup.js";
 import jams from "./jams/jams.js";
 import joinJam from "./join-jam/join-jam.js";
+import streamers from "./streamers/streamers.js";
 
 var router = express.Router();
 
@@ -19,6 +20,7 @@ router.use("/self", self);
 router.use("/signup", signup);
 router.use("/jams", jams);
 router.use("/join-jam", joinJam);
+router.use("/streamers",streamers);
 
 router.get("/", function (req, res) {
   res.send("API v1 Route");
