@@ -24,6 +24,7 @@ model User {
   bio               String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+  mod               Boolean   @default(false)
 
   // Relations
   posts             Post[]    @relation(name: "PostToAuthor")
