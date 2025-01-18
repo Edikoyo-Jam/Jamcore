@@ -116,3 +116,13 @@ model Like {
   comment     Comment?  @relation(fields: [commentId], references: [id], name: "LikeToComment")
   commentId   Int?
 }
+
+model FeaturedStreamer {
+  id           Int      @id @default(autoincrement()) 
+  userName     String   
+  thumbnailUrl String   
+  streamTitle  String   
+  streamTags   String[] @default([])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
