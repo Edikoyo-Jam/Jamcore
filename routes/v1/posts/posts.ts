@@ -6,7 +6,7 @@ var router = express.Router();
 
 router.get("/", async function (req, res) {
   const posts = await prisma.post.findMany({
-    take: 10,
+    take: 20,
     include: {
       author: true,
       flairs: true,
