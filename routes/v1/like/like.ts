@@ -60,7 +60,7 @@ router.post("/", async function (req, res) {
         })
         .header("Authorization", accessToken);
     } catch (error) {
-      res.status(400);
+      res.status(401);
       res.send("Invalid Token.");
       return;
     }
