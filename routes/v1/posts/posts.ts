@@ -10,7 +10,7 @@ router.get("/", async function (req, res) {
     include: {
       author: true,
       flairs: true,
-      likers: true,
+      likes: true,
     },
     orderBy: {
       id: "desc",

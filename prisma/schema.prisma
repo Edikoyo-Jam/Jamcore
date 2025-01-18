@@ -27,7 +27,8 @@ model User {
 
   // Relations
   posts             Post[]    @relation(name: "PostToAuthor")
-  postLike          Post[]
+  likes             Like[]
+  comments          Comment[]
   ownedGames        Game[]    @relation(name: "GameToAuthor")
   contributedGames  Game[]
   jams              Jam[]
@@ -53,7 +54,22 @@ model Post {
   author    User      @relation(fields: [authorId], references: [id], name: "PostToAuthor")
   authorId  Int
   flairs    Flair[]
-  likers    User[]
+  comments  Comment[]
+  likes     Like[]    @relation(name: "LikeToPost")
+}
+
+model Comment {
+  id        Int       @id @default(autoincrement())
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  post      Post      @relation(fields: [postId], references: [id])
+  postId    Int
+  author    User      @relation(fields: [authorId], references: [id])
+  authorId  Int
+  likes     Like[]    @relation(name: "LikeToComment")
 }
 
 model Jam {
@@ -85,4 +101,18 @@ model Game {
   contributors  User[]
   jam           Jam       @relation(fields: [jamId], references: [id], name: "GameToEvent")
   jamId         Int
+}
+
+model Like {
+  id          Int       @id @default(autoincrement())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id])
+  userId      Int
+  post        Post?     @relation(fields: [postId], references: [id], name: "LikeToPost")
+  postId      Int?
+  comment     Comment?  @relation(fields: [commentId], references: [id], name: "LikeToComment")
+  commentId   Int?
 }
