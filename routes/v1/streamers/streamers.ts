@@ -1,19 +1,9 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
-import { updateFeaturedStreamers } from '../../../helper/updateFeaturedStreamers.ts';
+
 
 const prisma = new PrismaClient();
 var router = express.Router();
-
-router.get('/', async (req, res) => {
-  try {
-    await updateFeaturedStreamers();
-    res.status(200).json({ message: 'Featured streamers updated successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 
 router.get('/get', async (req, res) => {
   try {

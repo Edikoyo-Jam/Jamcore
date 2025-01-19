@@ -40,9 +40,6 @@ export async function updateFeaturedStreamers() {
   return stream.tags.some((tag) => desiredTags.includes(tag));
 });
 
-    console.log('Fetched streams:', streams); // Log all fetched streams
-    console.log('Filtered streams:', filteredStreams); // Log filtered 
-
     // Step 4: Update database with filtered streams
     await prisma.featuredStreamer.deleteMany(); // Clear existing records
 
