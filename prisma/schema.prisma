@@ -25,6 +25,7 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   mod               Boolean   @default(false)
+  admin             Boolean   @default(false)
 
   // Relations
   posts             Post[]    @relation(name: "PostToAuthor")
@@ -33,6 +34,8 @@ model User {
   ownedGames        Game[]    @relation(name: "GameToAuthor")
   contributedGames  Game[]
   jams              Jam[]
+  reports           Report[]  @relation(name: "ReportToUser")
+  createdReports    Report[]  @relation(name: "ReportToReporter")
 }
 
 model Flair {
@@ -57,6 +60,7 @@ model Post {
   flairs    Flair[]
   comments  Comment[]
   likes     Like[]    @relation(name: "LikeToPost")
+  reports   Report[]  @relation(name: "ReportToPost")
 }
 
 model Comment {
@@ -71,6 +75,7 @@ model Comment {
   author    User      @relation(fields: [authorId], references: [id])
   authorId  Int
   likes     Like[]    @relation(name: "LikeToComment")
+  reports   Report[]  @relation(name: "ReportToComment")
 }
 
 model Jam {
@@ -102,6 +107,7 @@ model Game {
   contributors  User[]
   jam           Jam       @relation(fields: [jamId], references: [id], name: "GameToEvent")
   jamId         Int
+  reports       Report[]  @relation(name: "ReportToGame")
 }
 
 model Like {
@@ -126,4 +132,23 @@ model FeaturedStreamer {
   streamTags   String[] @default([])
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model Report {
+  id          Int       @id @default(autoincrement()) 
+  resolved    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  reporter    User      @relation(fields: [reporterId], references: [id], name: "ReportToReporter")
+  reporterId  Int
+  user        User?     @relation(fields: [userId], references: [id], name: "ReportToUser")
+  userId      Int
+  post        Post?     @relation(fields: [postId], references: [id], name: "ReportToPost")
+  postId      Int?
+  comment     Comment?  @relation(fields: [commentId], references: [id], name: "ReportToComment")
+  commentId   Int?
+  game        Game?     @relation(fields: [gameId], references: [id], name: "ReportToGame")
+  gameId      Int?
 }

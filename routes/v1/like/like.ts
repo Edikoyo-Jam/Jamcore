@@ -95,6 +95,7 @@ router.post("/", async function (req, res) {
     }
 
     let postLikes = post.likes.length;
+    let action = "";
 
     const conflictlike = await prisma.like.findFirst({
       where: {
@@ -111,6 +112,7 @@ router.post("/", async function (req, res) {
         },
       });
       postLikes -= 1;
+      action = "unlike";
     } else {
       await prisma.like.create({
         data: {
@@ -119,9 +121,13 @@ router.post("/", async function (req, res) {
         },
       });
       postLikes += 1;
+      action = "like";
     }
 
-    res.send("" + postLikes);
+    res.send({
+      action: action,
+      likes: postLikes,
+    });
   }
 });
 

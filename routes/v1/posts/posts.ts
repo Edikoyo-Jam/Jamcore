@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 var router = express.Router();
 
 router.get("/", async function (req, res) {
-  const { sort } = req.query;
+  const { sort, user } = req.query;
 
   let orderBy = {};
 
@@ -33,7 +33,22 @@ router.get("/", async function (req, res) {
     orderBy,
   });
 
-  res.send(posts);
+  let userId = null;
+  if (user) {
+    const userRecord = await prisma.user.findUnique({
+      where: { slug: String(user) },
+    });
+    userId = userRecord ? userRecord.id : null;
+  }
+
+  const postsWithLikes = posts.map((post) => ({
+    ...post,
+    hasLiked: userId
+      ? post.likes.some((like) => like.userId === userId)
+      : false,
+  }));
+
+  res.send(postsWithLikes);
 });
 
 export default router;
