@@ -4,7 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 import v1 from "./routes/v1/v1.js";
-import { updateFeaturedStreamers } from "./helper/updateFeaturedStreamers.ts";
+import { updateFeaturedStreamers } from "./helper/updateFeaturedStreamers.js";
 
 const port = 3005;
 
@@ -35,7 +35,6 @@ cron.schedule("*/5 * * * *", async () => {
     console.error("Error updating featured streamers:", error);
   }
 });
-
 
 app.listen(port, () => {
   console.log(`Jamcore listening on port ${port}`);
