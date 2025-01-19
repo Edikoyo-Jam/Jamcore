@@ -13,7 +13,7 @@ app.use(
     origin:
       process.env.NODE_ENV === "production"
         ? "https://d2jam.com"
-        : "http://localhost:3070",
+        : `http://localhost:${process.env.FRONT_DEV_PORT || 3000}`,
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
     exposedHeaders: ["Authorization"],
