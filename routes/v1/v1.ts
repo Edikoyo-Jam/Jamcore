@@ -12,6 +12,7 @@ import like from "./like/like.js";
 import streamers from "./streamers/streamers.js";
 import logout from "./logout/logout.js";
 import tags from "./tags/tags.js";
+import themes from "./themes/themes.js";
 
 var router = express.Router();
 
@@ -27,6 +28,7 @@ router.use("/like", like);
 router.use("/streamers", streamers);
 router.use("/logout", logout);
 router.use("/tags", tags);
+router.use("/themes", themes);
 
 router.get("/", function (req, res) {
   res.send("API v1 Route");

@@ -36,6 +36,8 @@ model User {
   jams              Jam[]
   reports           Report[]  @relation(name: "ReportToUser")
   createdReports    Report[]  @relation(name: "ReportToReporter")
+  themeSuggestions  ThemeSuggestion[] @relation(name: "SuggestionToUser")
+  themeVotes        ThemeVote[] @relation(name: "VoteToUser")
 }
 
 enum Priority {
@@ -119,14 +121,21 @@ model Jam {
   id              Int       @id @default(autoincrement())
   name            String
   startTime       DateTime  @default(now())
-  ratingHours     Int
-  slaughterHours  Int
+  suggestionHours Int       @default(168)
+  slaughterHours  Int       @default(96)
+  votingHours  	  Int       @default(72)
+  jammingHours    Int       @default(72)
+  ratingHours     Int       @default(336)
+  isActive        Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+
   // Relations
-  games           Game[]    @relation(name: "GameToEvent")
-  users           User[]
+  games             Game[]    @relation(name: "GameToEvent")
+  users             User[]
+  themeSuggestions  ThemeSuggestion[] @relation(name: "SuggestionToEvent")
+  themeVotes        ThemeVote[] @relation(name: "VoteToEvent")
 }
 
 model Game {
@@ -188,4 +197,31 @@ model Report {
   commentId   Int?
   game        Game?     @relation(fields: [gameId], references: [id], name: "ReportToGame")
   gameId      Int?
+}
+
+model ThemeSuggestion {
+  id             	      Int       @id @default(autoincrement())
+  suggestion 		 	      String
+  totalSlaughterScore 	Int
+  totalVotingScore	    Int
+  creationTime          DateTime  @default(now())
+
+  // Relations
+  createdBy        	    User      @relation(fields: [userId], references: [id], name: "SuggestionToUser")
+  userId                Int
+  createdFor         	  Jam       @relation(fields: [jamId], references: [id], name: "SuggestionToEvent")
+  jamId                 Int
+}
+
+
+model ThemeVote {
+  id              Int       @id @default(autoincrement())
+  slaughterScore  Int
+  votingScore     Int
+
+  // Relations
+  user        	  User      @relation(fields: [userId], references: [id], name: "VoteToUser")
+  userId          Int
+  jam         	  Jam       @relation(fields: [jamId], references: [id], name: "VoteToEvent")
+  jamId           Int
 }
