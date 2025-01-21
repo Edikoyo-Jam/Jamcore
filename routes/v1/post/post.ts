@@ -78,6 +78,20 @@ router.post("/", async function (req, res) {
     return;
   }
 
+  if (tags && tags.length > 0) {
+    const modTags = await prisma.tag.findMany({
+      where: {
+        id: { in: tags },
+        modOnly: true,
+      },
+    });
+
+    if (modTags.length > 0 && !user.mod) {
+      res.status(403).send("Insufficient permissions to use moderator tags.");
+      return;
+    }
+  }
+
   const newpost = await prisma.post.create({
     data: {
       title,
