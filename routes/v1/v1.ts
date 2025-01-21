@@ -11,6 +11,7 @@ import joinJam from "./join-jam/join-jam.js";
 import like from "./like/like.js";
 import streamers from "./streamers/streamers.js";
 import logout from "./logout/logout.js";
+import tags from "./tags/tags.js";
 
 var router = express.Router();
 
@@ -25,6 +26,7 @@ router.use("/join-jam", joinJam);
 router.use("/like", like);
 router.use("/streamers", streamers);
 router.use("/logout", logout);
+router.use("/tags", tags);
 
 router.get("/", function (req, res) {
   res.send("API v1 Route");

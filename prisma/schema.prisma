@@ -38,29 +38,66 @@ model User {
   createdReports    Report[]  @relation(name: "ReportToReporter")
 }
 
-model Flair {
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+model TagCategory {
   id          Int       @id @default(autoincrement())
   name        String    @unique
+  priority    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relation
+  tags        Tag[]
+}
+
+model Tag {
+  id          Int           @id @default(autoincrement())
+  name        String        @unique
   description String?
+  autoRegex   String?
+  alwaysAdded Boolean       @default(false)
+  priority    Priority      @default(MEDIUM)
+  modOnly     Boolean       @default(false)
+  icon        String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   // Relations
-  posts           Post[]
+  posts       Post[]
+  category    TagCategory?  @relation(fields: [categoryId], references: [id])
+  categoryId  Int?
+}
+
+model CustomTag {
+  id          Int       @id @default(autoincrement())
+  name        String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  posts       Post[]
 }
 
 model Post {
-  id        Int       @id @default(autoincrement())
-  title     String
-  content   String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id          Int       @id @default(autoincrement())
+  title       String
+  content     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // Relations
-  author    User      @relation(fields: [authorId], references: [id], name: "PostToAuthor")
-  authorId  Int
-  flairs    Flair[]
-  comments  Comment[]
-  likes     Like[]    @relation(name: "LikeToPost")
-  reports   Report[]  @relation(name: "ReportToPost")
+  author      User      @relation(fields: [authorId], references: [id], name: "PostToAuthor")
+  authorId    Int
+  tags        Tag[]
+  customTags  CustomTag[]
+  comments    Comment[]
+  likes       Like[]    @relation(name: "LikeToPost")
+  reports     Report[]  @relation(name: "ReportToPost")
 }
 
 model Comment {

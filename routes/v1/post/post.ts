@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 var router = express.Router();
 
 router.post("/", async function (req, res) {
-  const { title, content, username } = req.body;
+  const { title, content, username, tags } = req.body;
 
   if (!title || !content || !username) {
     res.status(400);
@@ -78,13 +78,24 @@ router.post("/", async function (req, res) {
     return;
   }
 
-  await prisma.post.create({
+  const newpost = await prisma.post.create({
     data: {
       title,
       content,
       authorId: user.id,
     },
   });
+
+  if (tags && tags.length > 0) {
+    await prisma.post.update({
+      where: { id: newpost.id },
+      data: {
+        tags: {
+          connect: tags.map((tagId: number) => ({ id: tagId })),
+        },
+      },
+    });
+  }
 
   res.send("Post created");
 });

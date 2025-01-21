@@ -5,11 +5,16 @@ import { PostTime } from "../../../types/PostTimes";
 const prisma = new PrismaClient();
 var router = express.Router();
 
+type WhereType = {
+  createdAt?: {};
+  tags?: {};
+};
+
 router.get("/", async function (req, res) {
-  const { sort = "newest", time = "all", user } = req.query;
+  const { sort = "newest", time = "all", user, tags } = req.query;
 
   let orderBy = {};
-  let where = {};
+  let where: WhereType = {};
   const now = new Date();
 
   if (time !== "all") {
@@ -29,9 +34,42 @@ router.get("/", async function (req, res) {
     };
 
     const hours = timeMapping[time as PostTime] || 0;
-    where = {
-      createdAt: { gte: new Date(now.getTime() - hours * 60 * 60 * 1000) },
+    where["createdAt"] = {
+      gte: new Date(now.getTime() - hours * 60 * 60 * 1000),
     };
+  }
+
+  if (tags) {
+    const splitTags = (tags as string).split("_");
+    const splitSplitTags = splitTags.map((tag) => ({
+      id: tag.split(",")[0],
+      value: tag.split(",")[1],
+    }));
+
+    const includeTags = splitSplitTags
+      .filter((tag) => tag.value === "1")
+      .map((tag) => parseInt(tag.id));
+
+    const excludeTags = splitSplitTags
+      .filter((tag) => tag.value === "-1")
+      .map((tag) => parseInt(tag.id));
+
+    if (includeTags.length > 0) {
+      where["tags"] = {
+        some: { id: { in: includeTags } },
+      };
+    }
+
+    console.log(includeTags);
+
+    if (excludeTags.length > 0) {
+      where["tags"] = {
+        ...where["tags"],
+        none: { id: { in: excludeTags } },
+      };
+    }
+
+    console.log(excludeTags);
   }
 
   // Handle sort filters
@@ -48,7 +86,7 @@ router.get("/", async function (req, res) {
     where,
     include: {
       author: true,
-      flairs: true,
+      tags: true,
       likes: true,
     },
     orderBy,
