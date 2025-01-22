@@ -1,12 +1,12 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
-import { getCurrentActiveJam } from "../../../services/jamService";
+import { getCurrentActiveJam,checkJamParticipation } from "../../../services/jamService";
 import { authenticateUser } from "../../../middleware/authMiddleware";
 
 const prisma = new PrismaClient();
 const router = express.Router();
 
-router.get("/suggestion", authenticateUser, async function (req, res) {
+router.get("/suggestion", authenticateUser, checkJamParticipation, async function (req, res) {
   const username = req.user.username;
 
   // Find the user
@@ -40,7 +40,7 @@ router.get("/suggestion", authenticateUser, async function (req, res) {
   }
 });
 
-router.get("/random", authenticateUser, async (req, res) => {
+router.get("/random", authenticateUser,checkJamParticipation, async (req, res) => {
   const username = req.user.username;
 
   const user = await prisma.user.findUnique({ where: { slug: username } });
@@ -90,7 +90,7 @@ router.get("/random", authenticateUser, async (req, res) => {
 });
 
 
-router.delete("/suggestion/:id", authenticateUser, async function (req, res) {
+router.delete("/suggestion/:id", authenticateUser,checkJamParticipation, async function (req, res) {
   const suggestionId = parseInt(req.params.id);
   const username = req.user.username;
 
@@ -125,7 +125,7 @@ router.delete("/suggestion/:id", authenticateUser, async function (req, res) {
   }
 });
 
-router.put("/suggestion/:id", authenticateUser, async function (req, res) {
+router.put("/suggestion/:id", authenticateUser,checkJamParticipation, async function (req, res) {
   const suggestionId = parseInt(req.params.id);
   const { suggestionText } = req.body;
   const username = req.user.username;
@@ -166,7 +166,7 @@ router.put("/suggestion/:id", authenticateUser, async function (req, res) {
   }
 });
 
-router.post("/suggestion", authenticateUser, async function (req, res) {
+router.post("/suggestion", authenticateUser,checkJamParticipation, async function (req, res) {
   const { suggestionText } = req.body;
 
   if (!suggestionText) {
@@ -234,7 +234,7 @@ router.post("/suggestion", authenticateUser, async function (req, res) {
 
 /// SLAUGHTER VOTES
 
-router.get("/voteSlaughter", authenticateUser, async (req, res) => {
+router.get("/voteSlaughter", authenticateUser,checkJamParticipation, async (req, res) => {
   const username = req.user.username;
 
   const user = await prisma.user.findUnique({
@@ -283,7 +283,7 @@ router.get("/voteSlaughter", authenticateUser, async (req, res) => {
 });
 
 
-router.post("/voteSlaughter", authenticateUser, async (req, res) => {
+router.post("/voteSlaughter", authenticateUser, checkJamParticipation, async (req, res) => {
   const username = req.user.username;
   const { suggestionId, voteType } = req.body;
 
@@ -366,7 +366,7 @@ router.post("/voteSlaughter", authenticateUser, async (req, res) => {
   }
 });
 
-router.put("/voteSlaughter/:id", authenticateUser, async (req, res) => {
+router.put("/voteSlaughter/:id", authenticateUser, checkJamParticipation, async (req, res) => {
   const username = req.user.username;
   const { voteType } = req.body; // voteType can be "YES", "NO", or "SKIP"
   const voteId = parseInt(req.params.id);
@@ -454,7 +454,7 @@ router.get("/top-themes", async (req, res) => {
   }
 });
 
-router.get("/votes", authenticateUser, async (req, res) => {
+router.get("/votes", authenticateUser, checkJamParticipation, async (req, res) => {
   const username = req.user.username;
   
   const user = await prisma.user.findUnique({
@@ -489,7 +489,7 @@ router.get("/votes", authenticateUser, async (req, res) => {
   }
 });
 
-router.post("/vote", authenticateUser, async (req, res) => {
+router.post("/vote", authenticateUser, checkJamParticipation, async (req, res) => {
   const username = req.user.username;
   const { suggestionId, votingScore } = req.body;
 

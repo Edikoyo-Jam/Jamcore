@@ -2,8 +2,8 @@ import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { getActiveJam } from "../../../controllers/jamController";
 import { postSuggestion, getSuggestions } from "../../../controllers/suggestionController";
-import jwt from "jsonwebtoken";
 import { getCurrentActiveJam } from "../../../services/jamService";
+import { authenticateUser } from "../../../middleware/authMiddleware";
 
 const prisma = new PrismaClient();
 var router = express.Router();
@@ -28,6 +28,38 @@ router.get("/active", async function (req, res) {
   }
 });
 
+router.get("/participation", authenticateUser, async function (req, res) {
+  const username = req.user.username;
 
+  try {
+    // Get active jam
+    const activeJam = await getCurrentActiveJam();
+    if (!activeJam || !activeJam.jam) {
+      return res.status(404).send("No active jam found.");
+    }
+
+    // Check if user has joined this jam
+    const hasJoined = await prisma.jam.findFirst({
+      where: {
+        id: activeJam.jam.id,
+        users: {
+          some: {
+            slug: username
+          }
+        }
+      }
+    });
+
+    if (hasJoined) {
+      res.status(200).json({ hasJoined: true });
+    } else {
+      res.status(403).json({ hasJoined: false });
+    }
+
+  } catch (error) {
+    console.error("Error checking jam participation:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
 
 export default router;
