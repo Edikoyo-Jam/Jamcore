@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Jam" ADD COLUMN     "themePerUser" INTEGER NOT NULL DEFAULT 3;

@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "npx tsx main.ts"
+    "start": "npx tsx main.ts",
+    "seed-users": "npx tsx prisma/seedUsers.ts",
+    "seed-suggestions": "npx tsx prisma/seedSuggestions.ts",
+    "seed-slaughter-votes": "npx tsx prisma/seedSlaughterVotes.ts",
+    "seed-voting": "npx tsx prisma/seedVoting.ts"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +25,7 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
+    "@faker-js/faker": "^9.4.0",
     "@prisma/client": "^6.2.1",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
@@ -29,7 +34,8 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "node-cron": "^3.0.3"
+    "node-cron": "^3.0.3",
+    "tsx": "^4.19.2"
   },
   "type": "module"
 }

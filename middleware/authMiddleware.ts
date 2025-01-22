@@ -1,11 +1,7 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 
-export const authenticateUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const authenticateUser = async (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const refreshToken = req.cookies["refreshToken"];
   const accessToken = authHeader && authHeader.split(" ")[1];
@@ -14,34 +10,50 @@ export const authenticateUser = async (
     return res.status(401).send("Unauthorized: Missing tokens.");
   }
 
-  if (!process.env.TOKEN_SECRET) {
-    return res.status(500).send("Server Error: Missing TOKEN_SECRET.");
-  }
-
   try {
     // Verify access token
     const decoded = jwt.verify(accessToken, process.env.TOKEN_SECRET);
-    req.user = { username: decoded.user }; // Attach user info to request object
+    console.log("Decoded Access Token:", decoded);
+
+    // Extract username from access token
+    const username = decoded.user || decoded.name; // Support both fields
+    if (!username) {
+      throw new Error("Access token missing 'user' or 'name' field");
+    }
+
+    req.user = { username }; // Attach user info to request object
     next();
   } catch (error) {
-    console.error("Access token invalid or expired:", error.message);
+    console.error("Access Token Error:", error.message);
 
-    // Verify refresh token
+    // If access token is invalid, try refreshing it
     try {
-      const refreshDecoded = jwt.verify(refreshToken, process.env.TOKEN_SECRET);
+      const decodedRefresh = jwt.verify(refreshToken, process.env.TOKEN_SECRET);
+      console.log("Decoded Refresh Token:", decodedRefresh);
+
+      // Extract username from refresh token
+      const username = decodedRefresh.user || decodedRefresh.name; // Support both fields
+      if (!username) {
+        throw new Error("Refresh token missing 'user' or 'name' field");
+      }
+
+      // Generate a new access token
       const newAccessToken = jwt.sign(
-        { user: refreshDecoded.user },
+        { user: username },
         process.env.TOKEN_SECRET,
         { expiresIn: "1h" }
       );
 
-      // Set new access token in response headers
-      res.setHeader("Authorization", `Bearer ${newAccessToken}`);
-      req.user = { username: refreshDecoded.user }; // Attach user info to request object
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        sameSite: "strict",
+      }).header("Authorization", newAccessToken);
+
+      req.user = { username }; // Attach user info to request object
       next();
     } catch (refreshError) {
-      console.error("Refresh token invalid:", refreshError.message);
-      return res.status(403).json({ error: "Invalid token" });
+      console.error("Refresh Token Error:", refreshError.message);
+      return res.status(401).send("Unauthorized: Invalid tokens.");
     }
   }
 };

@@ -129,6 +129,9 @@ model Jam {
   isActive        Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  themePerUser    Int       @default(3)
+  themePerRound   Int       @default(15)
+  noOfRounds      Int       @default(1)
 
 
   // Relations
@@ -202,8 +205,8 @@ model Report {
 model ThemeSuggestion {
   id             	      Int       @id @default(autoincrement())
   suggestion 		 	      String
-  totalSlaughterScore 	Int
-  totalVotingScore	    Int
+  totalSlaughterScore 	Int       @default(0)
+  totalVotingScore	    Int       @default(0)
   creationTime          DateTime  @default(now())
 
   // Relations
@@ -211,17 +214,20 @@ model ThemeSuggestion {
   userId                Int
   createdFor         	  Jam       @relation(fields: [jamId], references: [id], name: "SuggestionToEvent")
   jamId                 Int
+  votes                 ThemeVote[]
 }
 
 
 model ThemeVote {
   id              Int       @id @default(autoincrement())
-  slaughterScore  Int
-  votingScore     Int
+  slaughterScore  Int       @default(0)
+  votingScore     Int       @default(0)
 
   // Relations
-  user        	  User      @relation(fields: [userId], references: [id], name: "VoteToUser")
-  userId          Int
-  jam         	  Jam       @relation(fields: [jamId], references: [id], name: "VoteToEvent")
-  jamId           Int
+  user        	    User            @relation(fields: [userId], references: [id], name: "VoteToUser")
+  userId            Int
+  jam         	    Jam             @relation(fields: [jamId], references: [id], name: "VoteToEvent")
+  jamId             Int
+  themeSuggestion   ThemeSuggestion @relation(fields: [themeSuggestionId], references: [id])
+  themeSuggestionId Int
 }
