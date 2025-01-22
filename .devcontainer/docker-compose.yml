@@ -1,0 +1,20 @@
+version: "3"
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+  devcontainer:
+    image: mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/postgres"
+    volumes:
+      - ../..:/workspaces:cached
+    network_mode: service:postgres
+    command: sleep infinity
+volumes:
+  postgres_data:
