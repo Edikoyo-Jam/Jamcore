@@ -1,5 +1,5 @@
-// services/jamService.ts
 import { PrismaClient } from "@prisma/client";
+
 
 const prisma = new PrismaClient();
 
@@ -70,4 +70,37 @@ export const getCurrentActiveJam = async () => {
   }
 
   return { phase: "No Active Jams" };
+};
+
+export const checkJamParticipation = async (req, res, next) => {
+  const username = req.user.username; // From your auth middleware
+
+  try {
+    // Get active jam
+    const activeJam = await getCurrentActiveJam();
+    if (!activeJam || !activeJam.jam) {
+      return res.status(404).send("No active jam found.");
+    }
+
+    // Check if user has joined this jam
+    const hasJoined = await prisma.jam.findFirst({
+      where: {
+        id: activeJam.jam.id,
+        users: {
+          some: {
+            slug: username
+          }
+        }
+      }
+    });
+
+    if (!hasJoined) {
+      return res.status(403).send("You must join the jam first to participate.");
+    }
+
+    next();
+  } catch (error) {
+    console.error("Error checking jam participation:", error);
+    res.status(500).send("Internal Server Error");
+  }
 };

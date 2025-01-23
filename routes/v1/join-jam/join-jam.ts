@@ -34,6 +34,7 @@ router.post("/", async function (req, res) {
     return;
   }
 
+
   try {
     jwt.verify(accessToken, process.env.TOKEN_SECRET);
   } catch (error) {
@@ -42,7 +43,7 @@ router.post("/", async function (req, res) {
       res.send("Access Denied. No refresh token provided.");
       return;
     }
-
+  
     try {
       jwt.verify(refreshToken, process.env.TOKEN_SECRET);
       const accessToken = jwt.sign(
@@ -65,7 +66,7 @@ router.post("/", async function (req, res) {
       return;
     }
   }
-
+  console.log("hop3");
   const existingUser = await prisma.jam.findFirst({
     where: {
       id: jamId,
@@ -77,7 +78,9 @@ router.post("/", async function (req, res) {
     },
   });
 
+
   if (existingUser) {
+    console.log("User already joined this jam");
     res.status(401);
     res.send();
     return;
