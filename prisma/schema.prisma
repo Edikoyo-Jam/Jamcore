@@ -92,6 +92,7 @@ model Post {
   content     String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  sticky      Boolean   @default(false)
 
   // Relations
   author      User      @relation(fields: [authorId], references: [id], name: "PostToAuthor")

@@ -11,7 +11,13 @@ type WhereType = {
 };
 
 router.get("/", async function (req, res) {
-  const { sort = "newest", time = "all", user, tags } = req.query;
+  const {
+    sort = "newest",
+    time = "all",
+    user,
+    tags,
+    sticky = false,
+  } = req.query;
 
   let orderBy = {};
   let where: WhereType = {};
@@ -83,7 +89,10 @@ router.get("/", async function (req, res) {
 
   const posts = await prisma.post.findMany({
     take: 20,
-    where,
+    where: {
+      ...where,
+      sticky: sticky === "true",
+    },
     include: {
       author: true,
       tags: true,
