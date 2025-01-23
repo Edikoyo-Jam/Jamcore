@@ -13,6 +13,8 @@ export const getCurrentActiveJam = async () => {
   console.log("Current UTC time:", now);
   console.log("Number of active jams:", jams.length);
 
+  let futureJam = null;
+
   for (const jam of jams) {
     // Convert jam.startTime to UTC if it isn't already
     const startTimeUTC = new Date(jam.startTime).toISOString();
@@ -61,12 +63,21 @@ export const getCurrentActiveJam = async () => {
     console.log("=======");
     */
 
-    if (now < startOfSuggestionsTime) return { phase: "Upcoming", jam };
+    if (now < startOfSuggestionsTime) 
+    {
+      if(!futureJam || jam.startTime < futureJam.startTime)
+        futureJam = jam;
+    }
     if (now >= startOfSuggestionsTime && now < suggestionEnd) return { phase: "Suggestion", jam };
     if (now >= suggestionEnd && now < slaughterEnd) return { phase: "Survival", jam };
     if (now >= slaughterEnd && now < votingEnd) return { phase: "Voting", jam };
     if (now >= votingEnd && now < jammingEnd) return { phase: "Jamming", jam };
     if (now >= jammingEnd && now < ratingEnd) return { phase: "Rating", jam };
+  }
+
+  if(futureJam)
+  {
+    return { phase: "Upcoming Jam", futureJam };
   }
 
   return { phase: "No Active Jams" };
