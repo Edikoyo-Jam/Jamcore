@@ -92,9 +92,28 @@ router.post("/", async function (req, res) {
     }
   }
 
+  let slugBase = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  let slug = slugBase;
+  let count = 1;
+
+  while (true) {
+    const existingPost = await prisma.post.findUnique({
+      where: { slug },
+    });
+
+    if (!existingPost) break;
+
+    count++;
+    slug = `${slugBase}-${count}`;
+  }
+
   const newpost = await prisma.post.create({
     data: {
       title,
+      slug,
       content,
       authorId: user.id,
     },
@@ -115,23 +134,52 @@ router.post("/", async function (req, res) {
 });
 
 router.get("/", async function (req, res) {
-  const { id } = req.query;
+  const { id, slug, user } = req.query;
 
-  if (!id || isNaN(parseInt(id as string))) {
+  if ((!id || isNaN(parseInt(id as string))) && !slug) {
     res.status(400);
     res.send();
     return;
   }
 
-  let idnumber = parseInt(id as string);
+  let userId = null;
+  if (user) {
+    const userRecord = await prisma.user.findUnique({
+      where: { slug: String(user) },
+    });
+    userId = userRecord ? userRecord.id : null;
+  }
 
-  const post = await prisma.post.findUnique({
-    where: {
-      id: idnumber,
-    },
-  });
+  if (id) {
+    let idnumber = parseInt(id as string);
 
-  res.send(post);
+    const post = await prisma.post.findUnique({
+      where: {
+        id: idnumber,
+      },
+    });
+
+    res.send({
+      ...post,
+      hasLiked: user && post?.likes.some((like) => like.userId === userId),
+    });
+  } else {
+    const post = await prisma.post.findUnique({
+      where: {
+        slug,
+      },
+      include: {
+        author: true,
+        tags: true,
+        likes: true,
+      },
+    });
+
+    res.send({
+      ...post,
+      hasLiked: user && post?.likes.some((like) => like.userId === userId),
+    });
+  }
 });
 
 router.delete("/", async function (req, res) {

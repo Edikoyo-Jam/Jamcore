@@ -87,6 +87,7 @@ model CustomTag {
 
 model Post {
   id          Int       @id @default(autoincrement())
+  slug        String?   @unique
   title       String
   content     String
   createdAt   DateTime  @default(now())
