@@ -32,7 +32,7 @@ model User {
   likes             Like[]
   comments          Comment[]
   ownedGames        Game[]    @relation(name: "GameToAuthor")
-  contributedGames  Game[]
+  contributedGames  Game[]    @relation("ContributedGames")
   jams              Jam[]
   reports           Report[]  @relation(name: "ReportToUser")
   createdReports    Report[]  @relation(name: "ReportToReporter")
@@ -145,20 +145,32 @@ model Jam {
 
 model Game {
   id            Int       @id @default(autoincrement())
-  slug          String
+  slug          String    @unique
   name          String
   description   String?
   thumbnail     String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  
 
   // Relations
   author        User      @relation(fields: [authorId], references: [id], name: "GameToAuthor")
   authorId      Int
-  contributors  User[]
+  contributors  User[]    @relation("ContributedGames")
   jam           Jam       @relation(fields: [jamId], references: [id], name: "GameToEvent")
   jamId         Int
   reports       Report[]  @relation(name: "ReportToGame")
+  downloadLinks GameDownloadLink[] @relation(name: "LinkToGame")
+}
+
+model GameDownloadLink {
+  id        Int      @id @default(autoincrement())
+  url       String
+  platform  String   // Will store: "Windows", "MacOS", "Linux", "Web", "Mobile", "Other"
+  
+  // Relation to Game
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade, name: "LinkToGame")
+  gameId    Int
 }
 
 model Like {

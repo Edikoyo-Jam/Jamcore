@@ -67,4 +67,39 @@ router.put("/", async function (req, res) {
   res.send(updatedUser);
 });
 
+
+
+router.get("/search", async function (req, res) {
+  const { q } = req.query;
+
+  if (!q || typeof q !== 'string') {
+    res.status(400).send("Search query is required");
+    return;
+  }
+
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { name: { contains: q, mode: 'insensitive' } },
+          { slug: { contains: q, mode: 'insensitive' } }
+        ]
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        profilePicture: true
+      },
+      take: 5 // Limit results
+    });
+
+    res.json(users);
+  } catch (error) {
+    console.error("Error searching users:", error);
+    res.status(500).send("Internal server error");
+  }
+});
+
+
 export default router;

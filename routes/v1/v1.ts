@@ -14,6 +14,7 @@ import logout from "./logout/logout.js";
 import tags from "./tags/tags.js";
 import themes from "./themes/themes.js";
 import mod from "./mod/mod.js";
+import games from "./games/games.js";
 
 var router = express.Router();
 
@@ -30,6 +31,7 @@ router.use("/streamers", streamers);
 router.use("/logout", logout);
 router.use("/tags", tags);
 router.use("/themes", themes);
+router.use("/games", games);
 router.use("/mod", mod);
 
 router.get("/", function (req, res) {
