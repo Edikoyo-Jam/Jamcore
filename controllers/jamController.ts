@@ -8,7 +8,8 @@ export const getActiveJam = async (req: Request, res: Response) => {
     if (!activeJam) {
       return res.status(404).json({ message: "No active jams found" });
     }
-    res.send(activeJam); // Controller sends the response here
+  
+    res.send(activeJam);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

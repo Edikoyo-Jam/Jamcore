@@ -34,14 +34,14 @@ router.get("/participation", authenticateUser, async function (req, res) {
   try {
     // Get active jam
     const activeJam = await getCurrentActiveJam();
-    if (!activeJam || !activeJam.jam) {
+    if (!activeJam || !activeJam.futureJam) {
       return res.status(404).send("No active jam found.");
     }
 
     // Check if user has joined this jam
     const hasJoined = await prisma.jam.findFirst({
       where: {
-        id: activeJam.jam.id,
+        id: activeJam.futureJam.id,
         users: {
           some: {
             slug: username

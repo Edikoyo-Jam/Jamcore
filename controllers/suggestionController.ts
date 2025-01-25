@@ -8,13 +8,13 @@ export const getSuggestions = async (req: Request, res: Response) => {
   try {
     // Get the current active jam
     const activeJam = await getCurrentActiveJam();
-    if (!activeJam || !activeJam.jam) {
+    if (!activeJam || !activeJam.futureJam) {
       return res.status(404).json({ message: "No active jam found" });
     }
 
     // Fetch all suggestions for the current jam
     const suggestions = await prisma.themeSuggestion.findMany({
-      where: { jamId: activeJam.jam.id }
+      where: { jamId: activeJam.futureJam.id }
     });
 
     return res.json(suggestions);
@@ -35,7 +35,7 @@ export const postSuggestion = async (req: Request, res: Response) => {
   
       // Get the current active jam
       const activeJam = await getCurrentActiveJam();
-      if (!activeJam || !activeJam.jam) {
+      if (!activeJam || !activeJam.futureJam) {
         return res.status(404).json({ message: "No active jam found" });
       }
   
@@ -44,7 +44,7 @@ export const postSuggestion = async (req: Request, res: Response) => {
         data: {
           suggestion: suggestionText,
           userId,
-          jamId: activeJam.jam.id,
+          jamId: activeJam.futureJam.id,
           totalSlaughterScore: 0,
           totalVotingScore: 0,
         },

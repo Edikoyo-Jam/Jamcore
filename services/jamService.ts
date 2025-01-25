@@ -15,6 +15,7 @@ export const getCurrentActiveJam = async () => {
 
   let futureJam = null;
 
+  let i = 0;
   for (const jam of jams) {
     // Convert jam.startTime to UTC if it isn't already
     const startTimeUTC = new Date(jam.startTime).toISOString();
@@ -26,6 +27,8 @@ export const getCurrentActiveJam = async () => {
       (jam.slaughterHours * 60 * 60 * 1000) - 
       (jam.votingHours * 60 * 60 * 1000)
     ).toISOString();
+
+
 
     const suggestionEnd = new Date(
       new Date(startOfSuggestionsTime).getTime() + 
@@ -52,7 +55,7 @@ export const getCurrentActiveJam = async () => {
       (jam.ratingHours * 60 * 60 * 1000)
     ).toISOString();
 
-    /*
+    
     console.log("Phase times (UTC):");
     console.log("Start of Suggestions:", startOfSuggestionsTime);
     console.log("End of Suggestions:", suggestionEnd);
@@ -61,18 +64,28 @@ export const getCurrentActiveJam = async () => {
     console.log("End of Jamming:", jammingEnd);
     console.log("End of Rating:", ratingEnd);
     console.log("=======");
-    */
-
-    if (now < startOfSuggestionsTime) 
+    
+    i++;
+    console.log(i);
+    if (now < ratingEnd) 
     {
+      console.log("checking  "+jam.id);
       if(!futureJam || jam.startTime < futureJam.startTime)
+      {
+        if(futureJam)
+          console.log("from "+futureJam.id);
         futureJam = jam;
+        console.log("future jam changed to "+jam.id);
+      }
+        
+      else continue;
     }
-    if (now >= startOfSuggestionsTime && now < suggestionEnd) return { phase: "Suggestion", jam };
-    if (now >= suggestionEnd && now < slaughterEnd) return { phase: "Survival", jam };
-    if (now >= slaughterEnd && now < votingEnd) return { phase: "Voting", jam };
-    if (now >= votingEnd && now < jammingEnd) return { phase: "Jamming", jam };
-    if (now >= jammingEnd && now < ratingEnd) return { phase: "Rating", jam };
+    
+    if (now >= startOfSuggestionsTime && now < suggestionEnd) return { phase: "Suggestion", futureJam };
+    if (now >= suggestionEnd && now < slaughterEnd) return { phase: "Survival", futureJam };
+    if (now >= slaughterEnd && now < votingEnd) return { phase: "Voting", futureJam };
+    if (now >= votingEnd && now < jammingEnd) return { phase: "Jamming", futureJam };
+    if (now >= jammingEnd && now < ratingEnd) return { phase: "Rating", futureJam };
   }
 
   if(futureJam)
@@ -89,14 +102,14 @@ export const checkJamParticipation = async (req, res, next) => {
   try {
     // Get active jam
     const activeJam = await getCurrentActiveJam();
-    if (!activeJam || !activeJam.jam) {
+    if (!activeJam || !activeJam.futureJam) {
       return res.status(404).send("No active jam found.");
     }
 
     // Check if user has joined this jam
     const hasJoined = await prisma.jam.findFirst({
       where: {
-        id: activeJam.jam.id,
+        id: activeJam.futureJam.id,
         users: {
           some: {
             slug: username

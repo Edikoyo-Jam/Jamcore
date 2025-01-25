@@ -20,7 +20,7 @@ router.get("/suggestion", authenticateUser, checkJamParticipation, async functio
 
   // Get current active jam
   const activeJam = await getCurrentActiveJam();
-  if (!activeJam || !activeJam.jam) {
+  if (!activeJam || !activeJam.futureJam) {
     return res.status(404).send("No active jam found.");
   }
 
@@ -29,7 +29,7 @@ router.get("/suggestion", authenticateUser, checkJamParticipation, async functio
     const suggestions = await prisma.themeSuggestion.findMany({
       where: {
         userId: user.id,
-        jamId: activeJam.jam.id,
+        jamId: activeJam.futureJam.id,
       },
     });
 
@@ -47,19 +47,19 @@ router.get("/random", authenticateUser,checkJamParticipation, async (req, res) =
   if (!user) return res.status(401).send("Unauthorized");
 
   const activeJam = await getCurrentActiveJam();
-  if (!activeJam || !activeJam.jam) return res.status(404).send("No active jam found.");
+  if (!activeJam || !activeJam.futureJam) return res.status(404).send("No active jam found.");
 
   try {
     // Fetch all eligible suggestion IDs
     const eligibleSuggestions = await prisma.themeSuggestion.findMany({
       where: {
-        jamId: activeJam.jam.id,
+        jamId: activeJam.futureJam.id,
         id: {
           notIn: (
             await prisma.themeVote.findMany({
               where: {
                 userId: user.id,
-                jamId: activeJam.jam.id,
+                jamId: activeJam.futureJam.id,
               },
               select: { themeSuggestionId: true },
             })
@@ -190,23 +190,23 @@ router.post("/suggestion", authenticateUser,checkJamParticipation, async functio
   const activeJam = await getCurrentActiveJam();
 
 
-  if (!activeJam || !activeJam.jam) {
+  if (!activeJam || !activeJam.futureJam) {
     return res.status(404).send("No active jam found.");
   }
 
-  if (activeJam && activeJam.jam && activeJam.phase != "Suggestion") {
+  if (activeJam && activeJam.futureJam && activeJam.phase != "Suggestion") {
     return res.status(404).send("It's not suggestion phase.");
   }
 
   // Check if themePerUser is set and enforce the limit
-  const themeLimit = activeJam.jam.themePerUser || Infinity; // Default to no limit if themePerUser is not set
+  const themeLimit = activeJam.futureJam.themePerUser || Infinity; // Default to no limit if themePerUser is not set
 
   try {
     // Count existing suggestions by the user for this jam
     const userSuggestionsCount = await prisma.themeSuggestion.count({
       where: {
         userId: user.id,
-        jamId: activeJam.jam.id,
+        jamId: activeJam.futureJam.id,
       },
     });
 
@@ -219,7 +219,7 @@ router.post("/suggestion", authenticateUser,checkJamParticipation, async functio
       data: {
         suggestion: suggestionText,
         userId: user.id,
-        jamId: activeJam.jam.id,
+        jamId: activeJam.futureJam.id,
         totalSlaughterScore: 0,
         totalVotingScore: 0,
       },
@@ -247,7 +247,7 @@ router.get("/voteSlaughter", authenticateUser,checkJamParticipation, async (req,
 
   // Get the current active jam
   const activeJam = await getCurrentActiveJam();
-  if (!activeJam || !activeJam.jam) {
+  if (!activeJam || !activeJam.futureJam) {
     return res.status(404).send("No active jam found.");
   }
 
@@ -261,7 +261,7 @@ router.get("/voteSlaughter", authenticateUser,checkJamParticipation, async (req,
     const votes = await prisma.themeVote.findMany({
       where: {
         userId: user.id,
-        jamId: activeJam.jam.id,
+        jamId: activeJam.futureJam.id,
       },
       include: {
         themeSuggestion: true, // Include related theme suggestion details
@@ -302,7 +302,7 @@ router.post("/voteSlaughter", authenticateUser, checkJamParticipation, async (re
 
   // Get the current active jam
   const activeJam = await getCurrentActiveJam();
-  if (!activeJam || !activeJam.jam) {
+  if (!activeJam || !activeJam.futureJam) {
     return res.status(404).send("No active jam found.");
   }
 
@@ -314,7 +314,7 @@ router.post("/voteSlaughter", authenticateUser, checkJamParticipation, async (re
   try {
     // Check if the user already voted on this suggestion
     let existingVote = await prisma.themeVote.findFirst({
-      where: { userId: user.id, jamId: activeJam.jam.id, themeSuggestionId: suggestionId },
+      where: { userId: user.id, jamId: activeJam.futureJam.id, themeSuggestionId: suggestionId },
     });
 
     let slaughterScoreChange = voteType === "YES" ? +1 : voteType === "NO" ? -1 : 0;
@@ -343,7 +343,7 @@ router.post("/voteSlaughter", authenticateUser, checkJamParticipation, async (re
         data: {
           slaughterScore: slaughterScoreChange,
           userId: user.id,
-          jamId: activeJam.jam.id,
+          jamId: activeJam.futureJam.id,
           themeSuggestionId: suggestionId, // Link vote to theme suggestion
         },
       });
@@ -430,7 +430,7 @@ router.put("/voteSlaughter/:id", authenticateUser, checkJamParticipation, async 
 
 router.get("/top-themes", async (req, res) => {
   const activeJam = await getCurrentActiveJam();
-  if (!activeJam || !activeJam.jam) {
+  if (!activeJam || !activeJam.futureJam) {
     return res.status(404).send("No active jam found.");
   }
 
@@ -442,9 +442,9 @@ router.get("/top-themes", async (req, res) => {
   try {
     // Fetch top N themes without user votes
     const topThemes = await prisma.themeSuggestion.findMany({
-      where: { jamId: activeJam.jam.id },
+      where: { jamId: activeJam.futureJam.id },
       orderBy: { totalSlaughterScore: "desc" },
-      take: activeJam.jam.themePerRound || 10,
+      take: activeJam.futureJam.themePerRound || 10,
     });
 
     res.json(topThemes);
@@ -466,7 +466,7 @@ router.get("/votes", authenticateUser, checkJamParticipation, async (req, res) =
   }
 
   const activeJam = await getCurrentActiveJam();
-  if (!activeJam || !activeJam.jam) {
+  if (!activeJam || !activeJam.futureJam) {
     return res.status(404).send("No active jam found.");
   }
 
@@ -474,7 +474,7 @@ router.get("/votes", authenticateUser, checkJamParticipation, async (req, res) =
     const votes = await prisma.themeVote.findMany({
       where: {
         userId: user.id,
-        jamId: activeJam.jam.id,
+        jamId: activeJam.futureJam.id,
       },
       select: {
         themeSuggestionId: true,
@@ -513,14 +513,14 @@ router.post("/vote", authenticateUser, checkJamParticipation, async (req, res) =
 
   // Get the current active jam
   const activeJam = await getCurrentActiveJam();
-  if (!activeJam || !activeJam.jam) {
+  if (!activeJam || !activeJam.futureJam) {
     return res.status(404).send("No active jam found.");
   }
 
   try {
     // Check if the user already voted on this suggestion
     let existingVote = await prisma.themeVote.findFirst({
-      where: { userId: user.id, jamId: activeJam.jam.id, themeSuggestionId: suggestionId },
+      where: { userId: user.id, jamId: activeJam.futureJam.id, themeSuggestionId: suggestionId },
     });
 
     if (existingVote) {
@@ -551,7 +551,7 @@ router.post("/vote", authenticateUser, checkJamParticipation, async (req, res) =
         data: {
           votingScore,
           userId: user.id,
-          jamId: activeJam.jam.id,
+          jamId: activeJam.futureJam.id,
           themeSuggestionId: suggestionId,
         },
       });

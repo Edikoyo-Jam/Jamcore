@@ -12,25 +12,24 @@ async function main() {
 
   // Use getCurrentActiveJam to fetch the active jam
   const activeJam = await getCurrentActiveJam();
-  if (!activeJam || !activeJam.jam) {
+  if (!activeJam || !activeJam.futureJam) {
     throw new Error("No active jam found.");
   }
 
-  console.log("Active Jam:", activeJam.jam);
 
   // Create random suggestions for each user
   const suggestions = [];
   for (const user of users) {
     const suggestionCount = faker.number.int({
       min: 1,
-      max: activeJam.jam.themePerUser || 5, // Limit based on themePerUser
+      max: activeJam.futureJam.themePerUser || 5, // Limit based on themePerUser
     });
 
     for (let i = 0; i < suggestionCount; i++) {
       suggestions.push({
         suggestion: faker.lorem.words(3),
         userId: user.id,
-        jamId: activeJam.jam.id,
+        jamId: activeJam.futureJam.id,
       });
     }
   }

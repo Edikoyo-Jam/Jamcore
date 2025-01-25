@@ -108,7 +108,7 @@ router.get("/current-game", async function (req, res) {
 
     // Get the current active jam
     const activeJamResponse = await getCurrentActiveJam();
-    const activeJam = activeJamResponse.jam;
+    const activeJam = activeJamResponse.futureJam;
 
     if (!activeJam) {
       return res.status(404).send("No active jam found.");

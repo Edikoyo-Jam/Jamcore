@@ -35,7 +35,7 @@ router.post("/create", async function (req, res) {
   
       // Get current active jam
       const activeJam = await getCurrentActiveJam();
-      if (!activeJam || !activeJam.jam) {
+      if (!activeJam || !activeJam.futureJam) {
         return res.status(404).send("No active jam found.");
       }
   
@@ -47,7 +47,7 @@ router.post("/create", async function (req, res) {
           description,
           thumbnail,
           authorId: user.id,
-          jamId: activeJam.jam.id,
+          jamId: activeJam.futureJam.id,
           downloadLinks: {
             create: downloadLinks.map((link: { url: string; platform: string }) => ({
               url: link.url,
