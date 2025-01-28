@@ -15,6 +15,7 @@ import tags from "./tags/tags.js";
 import themes from "./themes/themes.js";
 import mod from "./mod/mod.js";
 import games from "./games/games.js";
+import comment from "./comment/comment.js";
 
 var router = express.Router();
 
@@ -33,6 +34,7 @@ router.use("/tags", tags);
 router.use("/themes", themes);
 router.use("/games", games);
 router.use("/mod", mod);
+router.use("/comment", comment);
 
 router.get("/", function (req, res) {
   res.send("API v1 Route");

@@ -97,6 +97,7 @@ router.get("/", async function (req, res) {
       author: true,
       tags: true,
       likes: true,
+      comments: true,
     },
     orderBy,
   });

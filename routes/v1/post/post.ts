@@ -270,11 +270,43 @@ router.get("/", async function (req, res) {
         author: true,
         tags: true,
         likes: true,
+        comments: {
+          include: {
+            author: true,
+            likes: true,
+            children: {
+              include: {
+                author: true,
+                likes: true,
+                children: {
+                  include: {
+                    author: true,
+                    likes: true,
+                    children: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
+    function addHasLikedToComments(comments: any[]): any {
+      return comments.map((comment) => ({
+        ...comment,
+        hasLiked: user && comment.likes?.some((like) => like.userId === userId),
+        children: comment.children
+          ? addHasLikedToComments(comment.children)
+          : [],
+      }));
+    }
+
+    const commentsWithHasLiked = addHasLikedToComments(post?.comments);
+
     res.send({
       ...post,
+      comments: commentsWithHasLiked,
       hasLiked: user && post?.likes.some((like) => like.userId === userId),
     });
   }

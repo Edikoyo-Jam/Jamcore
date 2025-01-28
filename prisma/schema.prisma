@@ -111,12 +111,15 @@ model Comment {
   updatedAt DateTime  @updatedAt
 
   // Relations
-  post      Post      @relation(fields: [postId], references: [id])
-  postId    Int
+  post      Post?     @relation(fields: [postId], references: [id])
+  postId    Int?
+  comment   Comment?  @relation(fields: [commentId], references: [id], name: "CommentToComments")
+  commentId Int?
   author    User      @relation(fields: [authorId], references: [id])
   authorId  Int
   likes     Like[]    @relation(name: "LikeToComment")
   reports   Report[]  @relation(name: "ReportToComment")
+  children  Comment[] @relation(name: "CommentToComments")
 }
 
 model Jam {

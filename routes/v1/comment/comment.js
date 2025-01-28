@@ -6,9 +6,9 @@ const prisma = new PrismaClient();
 var router = express.Router();
 
 router.post("/", async function (req, res) {
-  const { postId, commentId, username } = req.body;
+  const { content, username, postId = null, commentId = null } = req.body;
 
-  if (!(postId || commentId) || !username) {
+  if (!content || !username || !(postId || commentId)) {
     res.status(400);
     res.send();
     return;
@@ -60,7 +60,7 @@ router.post("/", async function (req, res) {
         })
         .header("Authorization", accessToken);
     } catch (error) {
-      res.status(401);
+      res.status(400);
       res.send("Invalid Token.");
       return;
     }
@@ -83,9 +83,6 @@ router.post("/", async function (req, res) {
       where: {
         id: postId,
       },
-      include: {
-        likes: true,
-      },
     });
 
     if (!post) {
@@ -93,50 +90,12 @@ router.post("/", async function (req, res) {
       res.send();
       return;
     }
-
-    let postLikes = post.likes.length;
-    let action = "";
-
-    const conflictlike = await prisma.like.findFirst({
-      where: {
-        userId: user.id,
-        postId,
-      },
-    });
-
-    if (conflictlike) {
-      await prisma.like.deleteMany({
-        where: {
-          userId: user.id,
-          postId,
-        },
-      });
-      postLikes -= 1;
-      action = "unlike";
-    } else {
-      await prisma.like.create({
-        data: {
-          userId: user.id,
-          postId,
-        },
-      });
-      postLikes += 1;
-      action = "like";
-    }
-
-    res.send({
-      action: action,
-      likes: postLikes,
-    });
   }
 
   if (commentId) {
     const comment = await prisma.comment.findUnique({
       where: {
         id: commentId,
-      },
-      include: {
-        likes: true,
       },
     });
 
@@ -145,42 +104,18 @@ router.post("/", async function (req, res) {
       res.send();
       return;
     }
-
-    let postLikes = comment.likes.length;
-    let action = "";
-
-    const conflictlike = await prisma.like.findFirst({
-      where: {
-        userId: user.id,
-        commentId,
-      },
-    });
-
-    if (conflictlike) {
-      await prisma.like.deleteMany({
-        where: {
-          userId: user.id,
-          commentId,
-        },
-      });
-      postLikes -= 1;
-      action = "unlike";
-    } else {
-      await prisma.like.create({
-        data: {
-          userId: user.id,
-          commentId,
-        },
-      });
-      postLikes += 1;
-      action = "like";
-    }
-
-    res.send({
-      action: action,
-      likes: postLikes,
-    });
   }
+
+  await prisma.comment.create({
+    data: {
+      content,
+      authorId: user.id,
+      postId: postId,
+      commentId: commentId,
+    },
+  });
+
+  res.send("Comment created");
 });
 
 export default router;
