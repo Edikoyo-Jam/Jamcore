@@ -293,7 +293,7 @@ router.get("/", async function (req, res) {
     });
 
     function addHasLikedToComments(comments: any[]): any {
-      return comments.map((comment) => ({
+      return comments?.map((comment) => ({
         ...comment,
         hasLiked: user && comment.likes?.some((like) => like.userId === userId),
         children: comment.children
