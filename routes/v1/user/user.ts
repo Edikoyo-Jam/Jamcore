@@ -35,7 +35,7 @@ router.get("/", async function (req, res) {
 });
 
 router.put("/", async function (req, res) {
-  const { slug, profilePicture } = req.body;
+  const { slug, profilePicture, bannerPicture, bio, name } = req.body;
 
   if (!slug) {
     res.status(400);
@@ -61,18 +61,19 @@ router.put("/", async function (req, res) {
     },
     data: {
       profilePicture,
+      bannerPicture,
+      bio,
+      name,
     },
   });
 
   res.send(updatedUser);
 });
 
-
-
 router.get("/search", async function (req, res) {
   const { q } = req.query;
 
-  if (!q || typeof q !== 'string') {
+  if (!q || typeof q !== "string") {
     res.status(400).send("Search query is required");
     return;
   }
@@ -81,17 +82,17 @@ router.get("/search", async function (req, res) {
     const users = await prisma.user.findMany({
       where: {
         OR: [
-          { name: { contains: q, mode: 'insensitive' } },
-          { slug: { contains: q, mode: 'insensitive' } }
-        ]
+          { name: { contains: q, mode: "insensitive" } },
+          { slug: { contains: q, mode: "insensitive" } },
+        ],
       },
       select: {
         id: true,
         name: true,
         slug: true,
-        profilePicture: true
+        profilePicture: true,
       },
-      take: 5 // Limit results
+      take: 5, // Limit results
     });
 
     res.json(users);
@@ -100,6 +101,5 @@ router.get("/search", async function (req, res) {
     res.status(500).send("Internal server error");
   }
 });
-
 
 export default router;
