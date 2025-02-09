@@ -1,9 +1,12 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { getActiveJam } from "../../../controllers/jamController";
-import { postSuggestion, getSuggestions } from "../../../controllers/suggestionController";
+import {
+  postSuggestion,
+  getSuggestions,
+} from "../../../controllers/suggestionController";
 import { getCurrentActiveJam } from "../../../services/jamService";
-import { authenticateUser } from "../../../middleware/authMiddleware";
+import authenticateUser from "../../../middleware/authUser";
 
 const prisma = new PrismaClient();
 var router = express.Router();
@@ -44,10 +47,10 @@ router.get("/participation", authenticateUser, async function (req, res) {
         id: activeJam.futureJam.id,
         users: {
           some: {
-            slug: username
-          }
-        }
-      }
+            slug: username,
+          },
+        },
+      },
     });
 
     if (hasJoined) {
@@ -55,7 +58,6 @@ router.get("/participation", authenticateUser, async function (req, res) {
     } else {
       res.status(403).json({ hasJoined: false });
     }
-
   } catch (error) {
     console.error("Error checking jam participation:", error);
     res.status(500).send("Internal Server Error");

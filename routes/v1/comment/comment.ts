@@ -1,8 +1,7 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
+import db from "../../../helper/db";
 
-const prisma = new PrismaClient();
 var router = express.Router();
 
 router.post("/", async function (req, res) {
@@ -66,7 +65,7 @@ router.post("/", async function (req, res) {
     }
   }
 
-  const user = await prisma.user.findUnique({
+  const user = await db.user.findUnique({
     where: {
       slug: username,
     },
@@ -79,7 +78,7 @@ router.post("/", async function (req, res) {
   }
 
   if (postId) {
-    const post = await prisma.post.findUnique({
+    const post = await db.post.findUnique({
       where: {
         id: postId,
       },
@@ -93,7 +92,7 @@ router.post("/", async function (req, res) {
   }
 
   if (commentId) {
-    const comment = await prisma.comment.findUnique({
+    const comment = await db.comment.findUnique({
       where: {
         id: commentId,
       },
@@ -106,7 +105,7 @@ router.post("/", async function (req, res) {
     }
   }
 
-  await prisma.comment.create({
+  await db.comment.create({
     data: {
       content,
       authorId: user.id,

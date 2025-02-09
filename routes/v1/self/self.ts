@@ -1,99 +1,26 @@
 import express from "express";
-import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
 import { getCurrentActiveJam } from "../../../services/jamService";
+import authUser from "../../../middleware/authUser";
+import getUser from "../../../middleware/getUser";
+import db from "../../../helper/db";
 
-const prisma = new PrismaClient();
 var router = express.Router();
 
-router.get("/", async function (req, res) {
-  const authHeader = req.headers["authorization"];
-  const refreshToken = req.cookies["refreshToken"];
-  const accessToken = authHeader && authHeader.split(" ")[1];
-  const { username } = req.query;
-
-  if (accessToken == null) {
-    res.status(401);
-    res.send();
-    return;
-  }
-  if (refreshToken == null) {
-    res.status(401);
-    res.send();
-    return;
-  }
-  if (!username) {
-    res.status(401);
-    res.send();
-    return;
-  }
-  if (!process.env.TOKEN_SECRET) {
-    res.status(500);
-    res.send();
-    return;
-  }
-
-  try {
-    jwt.verify(accessToken, process.env.TOKEN_SECRET);
-  } catch (error) {
-    if (!refreshToken) {
-      res.status(401);
-      res.send("Access Denied. No refresh token provided.");
-      return;
-    }
-
-    try {
-      jwt.verify(refreshToken, process.env.TOKEN_SECRET);
-      const accessToken = jwt.sign(
-        { user: username },
-        process.env.TOKEN_SECRET,
-        {
-          expiresIn: "1h",
-        }
-      );
-
-      res
-        .cookie("refreshToken", refreshToken, {
-          httpOnly: true,
-          sameSite: "strict",
-        })
-        .header("Authorization", accessToken);
-    } catch (error) {
-      res.status(400);
-      res.send("Invalid Token.");
-      return;
-    }
-  }
-
-  const user = await prisma.user.findUnique({
-    where: {
-      slug: username as string,
-    },
-    include: {
-      jams: true,
-    },
-  });
-
-  if (!user) {
-    res.status(403);
-    res.send();
-    return;
-  }
-
-  res.send(JSON.stringify(user));
+router.get("/", authUser, getUser, function (_req, res): void {
+  res.json(res.locals.user);
 });
 
-
-router.get("/current-game", async function (req, res) {
+router.get("/current-game", async function (req, res): Promise<void> {
   const { username } = req.query;
 
   if (!username) {
-    return res.status(400).send("Username is required.");
+    res.status(400).send("Username is required");
+    return;
   }
 
   try {
     // Find the user by their slug
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { slug: username as string },
       include: {
         contributedGames: {
@@ -103,7 +30,8 @@ router.get("/current-game", async function (req, res) {
     });
 
     if (!user) {
-      return res.status(404).send("User not found.");
+      res.status(404).send("User not found.");
+      return;
     }
 
     // Get the current active jam
@@ -111,7 +39,8 @@ router.get("/current-game", async function (req, res) {
     const activeJam = activeJamResponse.futureJam;
 
     if (!activeJam) {
-      return res.status(404).send("No active jam found.");
+      res.status(404).send("No active jam found.");
+      return;
     }
 
     const contributedGameInCurrentJam = user.contributedGames.find(
@@ -121,11 +50,12 @@ router.get("/current-game", async function (req, res) {
     const currentGame = contributedGameInCurrentJam;
 
     if (!currentGame) {
-      return res.status(200).json(null);
+      res.status(200).json(null);
+      return;
     }
 
     // Fetch full game details including contributors and author
-    const fullGameDetails = await prisma.game.findUnique({
+    const fullGameDetails = await db.game.findUnique({
       where: { id: currentGame.id },
       include: {
         author: true,
@@ -140,7 +70,5 @@ router.get("/current-game", async function (req, res) {
     res.status(500).send("Internal server error.");
   }
 });
-
-
 
 export default router;

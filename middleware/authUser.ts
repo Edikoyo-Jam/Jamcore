@@ -1,19 +1,24 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 
-export const authenticateUser = async (req, res, next) => {
+function authUser(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers["authorization"];
   const refreshToken = req.cookies["refreshToken"];
   const accessToken = authHeader && authHeader.split(" ")[1];
 
   if (!accessToken || !refreshToken) {
-    return res.status(401).send("Unauthorized: Missing tokens.");
+    res.status(401).send("Unauthorized: Missing tokens.");
+    return;
+  }
+
+  if (!process.env.TOKEN_SECRET) {
+    res.status(502).send("Token secret not set up");
+    return;
   }
 
   try {
     // Verify access token
     const decoded = jwt.verify(accessToken, process.env.TOKEN_SECRET);
-    console.log("Decoded Access Token:", decoded);
 
     // Extract username from access token
     const username = decoded.user || decoded.name; // Support both fields
@@ -21,7 +26,7 @@ export const authenticateUser = async (req, res, next) => {
       throw new Error("Access token missing 'user' or 'name' field");
     }
 
-    req.user = { username }; // Attach user info to request object
+    res.locals.userSlug = username;
     next();
   } catch (error) {
     console.error("Access Token Error:", error.message);
@@ -44,16 +49,21 @@ export const authenticateUser = async (req, res, next) => {
         { expiresIn: "1h" }
       );
 
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        sameSite: "strict",
-      }).header("Authorization", newAccessToken);
+      res
+        .cookie("refreshToken", refreshToken, {
+          httpOnly: true,
+          sameSite: "strict",
+        })
+        .header("Authorization", newAccessToken);
 
-      req.user = { username }; // Attach user info to request object
+      res.locals.userSlug = username;
       next();
     } catch (refreshError) {
       console.error("Refresh Token Error:", refreshError.message);
-      return res.status(401).send("Unauthorized: Invalid tokens.");
+      res.status(401).send("Unauthorized: Invalid tokens.");
+      return;
     }
   }
-};
+}
+
+export default authUser;
