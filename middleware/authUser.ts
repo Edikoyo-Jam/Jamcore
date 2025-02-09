@@ -1,6 +1,9 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 
+/**
+ * Middleware to check if the user is authenticated and that the authentication is valid
+ */
 function authUser(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers["authorization"];
   const refreshToken = req.cookies["refreshToken"];

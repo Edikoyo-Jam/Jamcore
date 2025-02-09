@@ -1,18 +1,22 @@
 import { Router } from "express";
-import db from "@helper/db";
-import jwt from "jsonwebtoken";
+import getRoute from "./get.js";
+import deleteRoute from "./delete.js";
+//import putRoute from "./put.js";
+import postRoute from "./post.js";
+import db from "@helper/db.js";
 
 const router = Router();
 
-// TODO: clean
+router.use(getRoute);
+router.use(deleteRoute);
+//router.use(putRoute);
+router.use(postRoute);
 
-/**
- * Route to get a user from the database.
- */
-router.post("/", async function (req, res) {
-  const { title, content, username, tags, sticky = false } = req.body;
+// TODO: Old Code: Clean up (add to put?)
+router.post("/sticky", async function (req, res) {
+  const { postId, sticky, username } = req.body;
 
-  if (!title || !content || !username) {
+  if (!postId || !username) {
     res.status(400);
     res.send();
     return;
@@ -82,60 +86,28 @@ router.post("/", async function (req, res) {
     return;
   }
 
-  if (tags && tags.length > 0) {
-    const modTags = await db.tag.findMany({
-      where: {
-        id: { in: tags },
-        modOnly: true,
-      },
-    });
-
-    if (modTags.length > 0 && !user.mod) {
-      res.status(403).send("Insufficient permissions to use moderator tags.");
-      return;
-    }
-  }
-
-  let slugBase = title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-  let slug = slugBase;
-  let count = 1;
-
-  while (true) {
-    const existingPost = await db.post.findUnique({
-      where: { slug },
-    });
-
-    if (!existingPost) break;
-
-    count++;
-    slug = `${slugBase}-${count}`;
-  }
-
-  const newpost = await db.post.create({
-    data: {
-      title,
-      slug,
-      sticky,
-      content,
-      authorId: user.id,
+  const post = await db.post.findUnique({
+    where: {
+      id: postId,
     },
   });
 
-  if (tags && tags.length > 0) {
-    await db.post.update({
-      where: { id: newpost.id },
-      data: {
-        tags: {
-          connect: tags.map((tagId: number) => ({ id: tagId })),
-        },
-      },
-    });
+  if (!post) {
+    res.status(401);
+    res.send();
+    return;
   }
 
-  res.send("Post created");
+  await db.post.update({
+    where: {
+      id: postId,
+    },
+    data: {
+      sticky,
+    },
+  });
+
+  res.send("Post updated");
 });
 
 export default router;

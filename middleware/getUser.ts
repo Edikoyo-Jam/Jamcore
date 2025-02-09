@@ -1,6 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import db from "../helper/db";
 
+/**
+ * Middleware to fetch the requesting user from the database.
+ * Requires authUser to be called previously in the middleware chain.
+ */
 async function getUser(
   _req: Request,
   res: Response,

@@ -1,3 +1,4 @@
+import "module-alias/register";
 import express from "express";
 import cron from "node-cron";
 import cors from "cors";
@@ -5,11 +6,13 @@ import cookieParser from "cookie-parser";
 
 import v1 from "./routes/v1/v1.js";
 import { updateFeaturedStreamers } from "./helper/updateFeaturedStreamers.js";
+import helmet from "helmet";
 
 const port = 3005;
 
 const app = express();
 
+app.use(helmet());
 app.use(
   cors({
     origin:

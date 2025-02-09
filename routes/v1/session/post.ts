@@ -1,10 +1,12 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
-import { hashPassword } from "../../../helper/password";
+import { checkPasswordHash } from "../../../helper/password";
 
 const prisma = new PrismaClient();
 var router = express.Router();
+
+// TODO: Clean up
 
 router.post("/", async function (req, res) {
   const { username, password } = req.body;
@@ -15,14 +17,20 @@ router.post("/", async function (req, res) {
     return;
   }
 
-  const conflictuser = await prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: {
       slug: (username as string).toLowerCase(),
     },
   });
 
-  if (conflictuser) {
-    res.status(409);
+  if (!user) {
+    res.status(401);
+    res.send();
+    return;
+  }
+
+  if (!(await checkPasswordHash(password, user.password))) {
+    res.status(401);
     res.send();
     return;
   }
@@ -32,14 +40,6 @@ router.post("/", async function (req, res) {
     res.send();
     return;
   }
-
-  const user = await prisma.user.create({
-    data: {
-      slug: username.toLowerCase().replace(" ", "_"),
-      name: username,
-      password: await hashPassword(password),
-    },
-  });
 
   const accessToken = jwt.sign({ name: user.slug }, process.env.TOKEN_SECRET, {
     expiresIn: "1h",

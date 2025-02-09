@@ -33,9 +33,18 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
+    "module-alias": "^2.2.3",
     "node-cron": "^3.0.3",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "winston": "^3.17.0"
   },
-  "type": "module"
+  "type": "module",
+  "_moduleAliases": {
+    "@middleware": "./middleware",
+    "@helper": "./helper"
+  }
 }
