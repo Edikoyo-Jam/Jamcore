@@ -1,10 +1,11 @@
 import multer from "multer";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
+const __dirname = import.meta.dirname;
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.resolve(import.meta.dirname, "..", "public", "images"));
+    cb(null, path.resolve(__dirname, "..", "public", "images"));
   },
   filename: function (req, file, cb) {
     let extArray = file.mimetype.split("/");

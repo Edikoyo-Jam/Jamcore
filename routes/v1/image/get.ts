@@ -3,6 +3,7 @@ import rateLimit from "@middleware/rateLimit";
 import path from "path";
 
 const router = Router();
+const __dirname = import.meta.dirname;
 
 /**
  * Route to get an image
@@ -15,7 +16,7 @@ router.get(
     const { filename } = req.params;
 
     const imagePath = path.join(
-      import.meta.dirname,
+      __dirname,
       "..",
       "..",
       "..",
