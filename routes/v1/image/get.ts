@@ -3,7 +3,10 @@ import rateLimit from "@middleware/rateLimit";
 import path from "path";
 
 const router = Router();
-const __dirname = import.meta.dirname;
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
  * Route to get an image
