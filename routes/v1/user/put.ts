@@ -29,7 +29,7 @@ router.put(
     const { email, profilePicture, bannerPicture, bio, name } = req.body;
 
     try {
-      await db.user.update({
+      const user = await db.user.update({
         where: {
           id: res.locals.user.id,
         },
@@ -40,9 +40,21 @@ router.put(
           bio,
           name,
         },
+        select: {
+          id: true,
+          name: true,
+          bio: true,
+          profilePicture: true,
+          createdAt: true,
+          slug: true,
+          mod: true,
+          admin: true,
+          jams: true,
+          bannerPicture: true,
+        },
       });
 
-      res.status(200).send({ message: "User updated" });
+      res.status(200).send({ message: "User updated", data: user });
     } catch (error) {
       console.error("Failed to update user: ", error);
       res.status(500).send({ message: "Failed to update user" });

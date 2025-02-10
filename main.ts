@@ -8,11 +8,15 @@ import v1 from "./routes/v1/v1.js";
 import { updateFeaturedStreamers } from "./helper/updateFeaturedStreamers.js";
 import helmet from "helmet";
 
-const port = 3005;
+const port = process.env.PORT || 3005;
 
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 app.use(
   cors({
     origin:

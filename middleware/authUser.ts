@@ -37,7 +37,7 @@ function authUser(req: Request, res: Response, next: NextFunction): void {
     // If access token is invalid, try refreshing it
     try {
       const decodedRefresh = jwt.verify(refreshToken, process.env.TOKEN_SECRET);
-      console.log("Decoded Refresh Token:", decodedRefresh);
+      //console.log("Decoded Refresh Token:", decodedRefresh);
 
       // Extract username from refresh token
       const username = decodedRefresh.user || decodedRefresh.name; // Support both fields

@@ -31,6 +31,7 @@ async function getUser(
       mod: true,
       admin: true,
       jams: true,
+      bannerPicture: true,
     },
   });
 

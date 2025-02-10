@@ -14,12 +14,14 @@ import themes from "./themes/themes.js";
 import mod from "./mod/mod.js";
 import games from "./games/games.js";
 import comment from "./comment/comment.js";
+import image from "./image/index.js";
 
 var router = express.Router();
 
 router.use("/user", user);
 router.use("/session", session);
 router.use("/post", post);
+router.use("/image", image);
 
 router.use("/posts", posts);
 router.use("/self", self);
