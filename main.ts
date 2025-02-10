@@ -11,6 +11,7 @@ import helmet from "helmet";
 const port = process.env.PORT || 3005;
 
 const app = express();
+app.set("trust proxy", 1);
 
 app.use(
   helmet({
