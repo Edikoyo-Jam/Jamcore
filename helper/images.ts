@@ -3,12 +3,19 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import fs from "fs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.resolve(__dirname, "..", "public", "images"));
+    const dir = path.resolve(__dirname, "..", "public", "images");
+
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    cb(null, dir);
   },
   filename: function (req, file, cb) {
     let extArray = file.mimetype.split("/");
