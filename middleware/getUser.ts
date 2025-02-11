@@ -32,6 +32,7 @@ async function getUser(
       admin: true,
       jams: true,
       bannerPicture: true,
+      email: true,
     },
   });
 

@@ -16,7 +16,7 @@ const router = Router();
  */
 router.post(
   "/",
-  rateLimit(),
+  rateLimit(5),
 
   body("username").isString().withMessage({
     message: "Please enter a valid username",
@@ -29,7 +29,7 @@ router.post(
   assertTokenSecret,
 
   async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
 
     try {
       const user = await db.user.create({
@@ -37,6 +37,7 @@ router.post(
           slug: username.toLowerCase().replace(" ", "_"),
           name: username,
           password: await hashPassword(password),
+          email,
         },
       });
 
