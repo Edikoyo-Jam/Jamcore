@@ -13,7 +13,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  */
 router.get(
   "/:filename",
-  rateLimit(),
+  rateLimit(9999),
 
   (req, res) => {
     const { filename } = req.params;
