@@ -38,26 +38,28 @@ export async function updateFeaturedStreamers() {
     const streams = response.data.data || [];
 
     // Step 3: Filter streams by desired tags
-    const desiredTags = ["d2jam", "LudumDare", "gamejam", "gamedev"];
+    const desiredTags = ["d2jam", "ludumdare", "gamejam", "gamedev"];
     const filteredStreams = streams.filter((stream) => {
       if (!stream.tags) return false; // Skip streams without tags
-      return stream.tags.some((tag) => desiredTags.includes(tag));
+      return stream.tags.some((tag) => desiredTags.includes(tag.toLowerCase()));
     });
 
     // Step 4: Update database with filtered streams
     await prisma.featuredStreamer.deleteMany(); // Clear existing records
 
     console.log("Inserting new featured streams into database...");
-    for (const stream of filteredStreams.slice(0, 5)) {
+    for (const stream of filteredStreams.slice(0, 12)) {
+      console.log(stream);
       console.log("Inserting stream:", stream.user_name);
       await prisma.featuredStreamer.create({
         data: {
           userName: stream.user_name,
           thumbnailUrl: stream.thumbnail_url
-            .replace("{width}", "320")
-            .replace("{height}", "180"),
+            .replace("{width}", "480")
+            .replace("{height}", "270"),
           streamTitle: stream.title,
-          streamTags: stream.tag_ids || [],
+          streamTags: stream.tags || [],
+          viewerCount: stream.viewer_count,
         },
       });
     }
