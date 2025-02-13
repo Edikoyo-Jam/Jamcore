@@ -38,6 +38,7 @@ export async function updateFeaturedStreamers() {
     const streams = response.data.data || [];
 
     // Step 3: Filter streams by desired tags
+    const priorityTags = ["d2jam"];
     const desiredTags = [
       "d2jam",
       "ludumdare",
@@ -45,16 +46,33 @@ export async function updateFeaturedStreamers() {
       "gamedev",
       "gamedevelopment",
     ];
-    const filteredStreams = streams.filter((stream) => {
-      if (!stream.tags) return false; // Skip streams without tags
-      return stream.tags.some((tag) => desiredTags.includes(tag.toLowerCase()));
-    });
+    const filteredStreams = streams
+      .filter((stream) => {
+        if (!stream.tags) return false; // Skip streams without tags
+        return stream.tags.some((tag) =>
+          desiredTags.includes(tag.toLowerCase())
+        );
+      })
+      .sort((a, b) => {
+        if (
+          a.tags.some((tag) => priorityTags.includes(tag.toLowerCase())) ===
+          b.tags.some((tag) => priorityTags.includes(tag.toLowerCase()))
+        ) {
+          return b.viewer_count - a.viewer_count;
+        }
+
+        if (a.tags.some((tag) => priorityTags.includes(tag.toLowerCase()))) {
+          return -1;
+        }
+
+        return 1;
+      });
 
     // Step 4: Update database with filtered streams
     await prisma.featuredStreamer.deleteMany(); // Clear existing records
 
     console.log("Inserting new featured streams into database...");
-    for (const stream of filteredStreams.slice(0, 12)) {
+    for (const stream of filteredStreams) {
       console.log(stream);
       console.log("Inserting stream:", stream.user_name);
       await prisma.featuredStreamer.create({
