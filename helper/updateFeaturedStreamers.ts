@@ -38,7 +38,13 @@ export async function updateFeaturedStreamers() {
     const streams = response.data.data || [];
 
     // Step 3: Filter streams by desired tags
-    const desiredTags = ["d2jam", "ludumdare", "gamejam", "gamedev"];
+    const desiredTags = [
+      "d2jam",
+      "ludumdare",
+      "gamejam",
+      "gamedev",
+      "gamedevelopment",
+    ];
     const filteredStreams = streams.filter((stream) => {
       if (!stream.tags) return false; // Skip streams without tags
       return stream.tags.some((tag) => desiredTags.includes(tag.toLowerCase()));
