@@ -49,23 +49,36 @@ export async function updateFeaturedStreamers() {
     const filteredStreams = streams
       .filter((stream) => {
         if (!stream.tags) return false; // Skip streams without tags
+        if (stream.language !== "en") return false; // Skip non english streams
         return stream.tags.some((tag) =>
           desiredTags.includes(tag.toLowerCase())
         );
       })
       .sort((a, b) => {
-        if (
-          a.tags.some((tag) => priorityTags.includes(tag.toLowerCase())) ===
-          b.tags.some((tag) => priorityTags.includes(tag.toLowerCase()))
-        ) {
-          return b.viewer_count - a.viewer_count;
+        const aIsPriority = a.tags.some((tag) =>
+          priorityTags.includes(tag.toLowerCase())
+        );
+        const bIsPriority = b.tags.some((tag) =>
+          priorityTags.includes(tag.toLowerCase())
+        );
+
+        if (aIsPriority && bIsPriority) {
+          return (
+            Math.log10(b.viewer_count + 1) -
+            Math.log10(a.viewer_count + 1) +
+            (Math.random() - 0.5) * 0.5 // Small random offset
+          );
         }
 
-        if (a.tags.some((tag) => priorityTags.includes(tag.toLowerCase()))) {
-          return -1;
-        }
+        if (aIsPriority) return -1; // Keep priority streams in front
+        if (bIsPriority) return 1;
 
-        return 1;
+        // Log scale for non-priority streams, with more randomness
+        return (
+          Math.log10(b.viewer_count + 1) -
+          Math.log10(a.viewer_count + 1) +
+          (Math.random() - 0.5) * 2 // Larger shuffle range for non-priority streams
+        );
       });
 
     // Step 4: Update database with filtered streams
@@ -82,7 +95,11 @@ export async function updateFeaturedStreamers() {
             .replace("{width}", "480")
             .replace("{height}", "270"),
           streamTitle: stream.title,
-          streamTags: stream.tags || [],
+          streamTags: stream.tags
+            ? ([
+                ...new Set(stream.tags.map((tag) => tag.toLowerCase())),
+              ] as string[])
+            : [],
           viewerCount: stream.viewer_count,
         },
       });
