@@ -33,11 +33,35 @@ async function getTargetUser(
       where: {
         id: idnumber,
       },
+      select: {
+        id: true,
+        name: true,
+        bio: true,
+        profilePicture: true,
+        createdAt: true,
+        slug: true,
+        mod: true,
+        admin: true,
+        jams: true,
+        bannerPicture: true,
+      },
     });
   } else {
     user = await db.user.findUnique({
       where: {
         slug: userSlug as string,
+      },
+      select: {
+        id: true,
+        name: true,
+        bio: true,
+        profilePicture: true,
+        createdAt: true,
+        slug: true,
+        mod: true,
+        admin: true,
+        jams: true,
+        bannerPicture: true,
       },
     });
   }
