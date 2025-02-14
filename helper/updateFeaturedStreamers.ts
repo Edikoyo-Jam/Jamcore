@@ -24,7 +24,7 @@ export async function updateFeaturedStreamers() {
     const accessToken = tokenResponse.data.access_token;
 
     // Step 2: Fetch streams from Twitch API
-    const gameId = "1469308723"; // Replace with your desired game ID
+    const gameIds = ["1469308723", "509660", "66082", "1599346425"]; // Gamedev, Art, Games&Demos, Coworking
     const response = await axios.get("https://api.twitch.tv/helix/streams", {
       headers: {
         "Client-ID": clientId,
@@ -32,7 +32,7 @@ export async function updateFeaturedStreamers() {
       },
       params: {
         first: 100,
-        game_id: gameId,
+        game_id: gameIds,
         type: "live",
       },
     });
@@ -65,9 +65,17 @@ export async function updateFeaturedStreamers() {
       return stream.tags.some((tag) => desiredTags.includes(tag.toLowerCase()));
     });
 
-    const priorityStreams = filteredStreams.filter((stream) =>
-      stream.tags.some((tag) => priorityTags.includes(tag.toLowerCase()))
-    );
+    const priorityStreams = filteredStreams
+      .filter((stream) =>
+        stream.tags.some((tag) => priorityTags.includes(tag.toLowerCase()))
+      )
+      .sort((a, b) => {
+        return (
+          Math.log10(b.viewer_count + 1) -
+          Math.log10(a.viewer_count + 1) +
+          (Math.random() - 0.5) // Small random offset
+        );
+      });
 
     const streamerStreams = filteredStreams
       .filter((stream) =>
@@ -75,7 +83,14 @@ export async function updateFeaturedStreamers() {
       )
       .filter((stream) =>
         streamerNames.includes(stream.user_name.toLowerCase())
-      );
+      )
+      .sort((a, b) => {
+        return (
+          Math.log10(b.viewer_count + 1) -
+          Math.log10(a.viewer_count + 1) +
+          (Math.random() - 0.5) // Small random offset
+        );
+      });
 
     const nonPriorityStreams = filteredStreams
       .filter((stream) =>
@@ -84,6 +99,13 @@ export async function updateFeaturedStreamers() {
       .filter(
         (stream) => !streamerNames.includes(stream.user_name.toLowerCase())
       )
+      .sort((a, b) => {
+        return (
+          Math.log10(b.viewer_count + 1) -
+          Math.log10(a.viewer_count + 1) +
+          (Math.random() - 0.5) // Small random offset
+        );
+      })
       .slice(0, 3);
 
     // Step 4: Update database with filtered streams
