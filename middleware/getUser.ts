@@ -35,6 +35,7 @@ async function getUser(
       jams: true,
       bannerPicture: true,
       email: true,
+      twitch: true,
     },
   });
 

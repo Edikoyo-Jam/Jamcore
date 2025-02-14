@@ -15,30 +15,35 @@ datasource db {
 }
 
 model User {
-  id                Int       @id @default(autoincrement())
-  slug              String    @unique
+  id                Int               @id @default(autoincrement())
+  slug              String            @unique
   name              String
   email             String?
   password          String
   profilePicture    String?
   bannerPicture     String?
   bio               String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  mod               Boolean   @default(false)
-  admin             Boolean   @default(false)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  mod               Boolean           @default(false)
+  admin             Boolean           @default(false)
+  twitch            String?
 
   // Relations
-  posts             Post[]    @relation(name: "PostToAuthor")
+  posts             Post[]            @relation(name: "PostToAuthor")
   likes             Like[]
   comments          Comment[]
-  ownedGames        Game[]    @relation(name: "GameToAuthor")
-  contributedGames  Game[]    @relation("ContributedGames")
+  ownedGames        Game[]            @relation(name: "GameToAuthor")
+  contributedGames  Game[]            @relation(name: "ContributedGames")
   jams              Jam[]
-  reports           Report[]  @relation(name: "ReportToUser")
-  createdReports    Report[]  @relation(name: "ReportToReporter")
+  reports           Report[]          @relation(name: "ReportToUser")
+  createdReports    Report[]          @relation(name: "ReportToReporter")
   themeSuggestions  ThemeSuggestion[] @relation(name: "SuggestionToUser")
-  themeVotes        ThemeVote[] @relation(name: "VoteToUser")
+  themeVotes        ThemeVote[]       @relation(name: "VoteToUser")
+  tracks            Track[]           @relation(name: "TrackToComposer")
+  scores            Score[]           @relation(name: "ScoreToUser")
+  ghosts            Ghost[]           @relation(name: "GhostToUser")
+  data              Data[]            @relation(name: "DataToUser")
 }
 
 enum Priority {
@@ -155,7 +160,6 @@ model Game {
   thumbnail     String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
 
   // Relations
   author        User      @relation(fields: [authorId], references: [id], name: "GameToAuthor")
@@ -165,6 +169,63 @@ model Game {
   jamId         Int
   reports       Report[]  @relation(name: "ReportToGame")
   downloadLinks GameDownloadLink[] @relation(name: "LinkToGame")
+  tracks        Track[]   @relation(name: "TrackToGame")
+  scores        Score[]   @relation(name: "ScoreToGame")
+  ghosts        Ghost[]   @relation(name: "GhostToGame")
+  data          Data[]    @relation(name: "DataToGame")
+}
+
+model Track {
+  id            Int       @id @default(autoincrement())
+  slug          String    @unique
+  name          String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  composer      User      @relation(fields: [composerId], references: [id], name: "TrackToComposer")
+  composerId    Int
+  game          Game      @relation(fields: [gameId], references: [id], name: "TrackToGame")
+  gameId        Int
+}
+
+model Score {
+  id            Int       @id @default(autoincrement())
+  data          String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], name: "ScoreToUser")
+  userId        Int
+  game          Game      @relation(fields: [gameId], references: [id], name: "ScoreToGame")
+  gameId        Int
+}
+
+model Ghost {
+  id            Int       @id @default(autoincrement())
+  data          String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], name: "GhostToUser")
+  userId        Int
+  game          Game      @relation(fields: [gameId], references: [id], name: "GhostToGame")
+  gameId        Int
+}
+
+model Data {
+  id            Int       @id @default(autoincrement())
+  data          String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], name: "DataToUser")
+  userId        Int
+  game          Game      @relation(fields: [gameId], references: [id], name: "DataToGame")
+  gameId        Int
 }
 
 model GameDownloadLink {
