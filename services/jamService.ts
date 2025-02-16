@@ -1,13 +1,15 @@
 import { PrismaClient } from "@prisma/client";
 
-
 const prisma = new PrismaClient();
 
 export const getCurrentActiveJam = async () => {
   const jams = await prisma.jam.findMany({
     where: { isActive: true },
+    include: {
+      users: true,
+    },
   });
-  
+
   // Get current time in UTC
   const now = new Date().toISOString();
   console.log("Current UTC time:", now);
@@ -19,43 +21,36 @@ export const getCurrentActiveJam = async () => {
   for (const jam of jams) {
     // Convert jam.startTime to UTC if it isn't already
     const startTimeUTC = new Date(jam.startTime).toISOString();
-    
+
     // Calculate all phase times in UTC
     const startOfSuggestionsTime = new Date(
-      new Date(startTimeUTC).getTime() - 
-      (jam.suggestionHours * 60 * 60 * 1000) - 
-      (jam.slaughterHours * 60 * 60 * 1000) - 
-      (jam.votingHours * 60 * 60 * 1000)
+      new Date(startTimeUTC).getTime() -
+        jam.suggestionHours * 60 * 60 * 1000 -
+        jam.slaughterHours * 60 * 60 * 1000 -
+        jam.votingHours * 60 * 60 * 1000
     ).toISOString();
 
-
-
     const suggestionEnd = new Date(
-      new Date(startOfSuggestionsTime).getTime() + 
-      (jam.suggestionHours * 60 * 60 * 1000)
+      new Date(startOfSuggestionsTime).getTime() +
+        jam.suggestionHours * 60 * 60 * 1000
     ).toISOString();
 
     const slaughterEnd = new Date(
-      new Date(suggestionEnd).getTime() + 
-      (jam.slaughterHours * 60 * 60 * 1000)
+      new Date(suggestionEnd).getTime() + jam.slaughterHours * 60 * 60 * 1000
     ).toISOString();
 
     const votingEnd = new Date(
-      new Date(slaughterEnd).getTime() + 
-      (jam.votingHours * 60 * 60 * 1000)
+      new Date(slaughterEnd).getTime() + jam.votingHours * 60 * 60 * 1000
     ).toISOString();
 
     const jammingEnd = new Date(
-      new Date(votingEnd).getTime() + 
-      (jam.jammingHours * 60 * 60 * 1000)
+      new Date(votingEnd).getTime() + jam.jammingHours * 60 * 60 * 1000
     ).toISOString();
 
     const ratingEnd = new Date(
-      new Date(jammingEnd).getTime() + 
-      (jam.ratingHours * 60 * 60 * 1000)
+      new Date(jammingEnd).getTime() + jam.ratingHours * 60 * 60 * 1000
     ).toISOString();
 
-    
     console.log("Phase times (UTC):");
     console.log("Start of Suggestions:", startOfSuggestionsTime);
     console.log("End of Suggestions:", suggestionEnd);
@@ -64,32 +59,31 @@ export const getCurrentActiveJam = async () => {
     console.log("End of Jamming:", jammingEnd);
     console.log("End of Rating:", ratingEnd);
     console.log("=======");
-    
+
     i++;
     console.log(i);
-    if (now < ratingEnd) 
-    {
-      console.log("checking  "+jam.id);
-      if(!futureJam || jam.startTime < futureJam.startTime)
-      {
-        if(futureJam)
-          console.log("from "+futureJam.id);
+    if (now < ratingEnd) {
+      console.log("checking  " + jam.id);
+      if (!futureJam || jam.startTime < futureJam.startTime) {
+        if (futureJam) console.log("from " + futureJam.id);
         futureJam = jam;
-        console.log("future jam changed to "+jam.id);
-      }
-        
-      else continue;
+        console.log("future jam changed to " + jam.id);
+      } else continue;
     }
-    
-    if (now >= startOfSuggestionsTime && now < suggestionEnd) return { phase: "Suggestion", futureJam };
-    if (now >= suggestionEnd && now < slaughterEnd) return { phase: "Survival", futureJam };
-    if (now >= slaughterEnd && now < votingEnd) return { phase: "Voting", futureJam };
-    if (now >= votingEnd && now < jammingEnd) return { phase: "Jamming", futureJam };
-    if (now >= jammingEnd && now < ratingEnd) return { phase: "Rating", futureJam };
+
+    if (now >= startOfSuggestionsTime && now < suggestionEnd)
+      return { phase: "Suggestion", futureJam };
+    if (now >= suggestionEnd && now < slaughterEnd)
+      return { phase: "Survival", futureJam };
+    if (now >= slaughterEnd && now < votingEnd)
+      return { phase: "Voting", futureJam };
+    if (now >= votingEnd && now < jammingEnd)
+      return { phase: "Jamming", futureJam };
+    if (now >= jammingEnd && now < ratingEnd)
+      return { phase: "Rating", futureJam };
   }
 
-  if(futureJam)
-  {
+  if (futureJam) {
     return { phase: "Upcoming Jam", futureJam };
   }
 
@@ -112,14 +106,16 @@ export const checkJamParticipation = async (req, res, next) => {
         id: activeJam.futureJam.id,
         users: {
           some: {
-            slug: username
-          }
-        }
-      }
+            slug: username,
+          },
+        },
+      },
     });
 
     if (!hasJoined) {
-      return res.status(403).send("You must join the jam first to participate.");
+      return res
+        .status(403)
+        .send("You must join the jam first to participate.");
     }
 
     next();

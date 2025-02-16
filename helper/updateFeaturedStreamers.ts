@@ -25,19 +25,29 @@ export async function updateFeaturedStreamers() {
 
     // Step 2: Fetch streams from Twitch API
     const gameIds = ["1469308723", "509660", "66082", "1599346425"]; // Gamedev, Art, Games&Demos, Coworking
-    const response = await axios.get("https://api.twitch.tv/helix/streams", {
-      headers: {
-        "Client-ID": clientId,
-        Authorization: `Bearer ${accessToken}`,
-      },
-      params: {
-        first: 100,
-        game_id: gameIds,
-        type: "live",
-      },
-    });
 
-    const streams = response.data.data || [];
+    let allStreams: any[] = [];
+    let cursor: string | null = null;
+
+    do {
+      const response = await axios.get("https://api.twitch.tv/helix/streams", {
+        headers: {
+          "Client-ID": clientId,
+          Authorization: `Bearer ${accessToken}`,
+        },
+        params: {
+          first: 100,
+          game_id: gameIds,
+          type: "live",
+          after: cursor, // Use the cursor to fetch the next page
+        },
+      });
+
+      allStreams = allStreams.concat(response.data.data);
+      cursor = response.data.pagination?.cursor || null; // Get the next page cursor
+    } while (cursor);
+
+    const streams = allStreams || [];
 
     // Step 3: Filter streams by desired tags
     const priorityTags = ["d2jam"];
