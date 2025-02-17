@@ -23,7 +23,7 @@ async function getJam(
   });
 
   if (!jam) {
-    res.status(401).send("Jam missing.");
+    res.status(404).send("Jam missing.");
     return;
   }
 
