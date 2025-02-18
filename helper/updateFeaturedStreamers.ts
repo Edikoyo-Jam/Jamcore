@@ -49,15 +49,16 @@ export async function updateFeaturedStreamers() {
 
     const streams = allStreams || [];
 
+    const tagSynonyms = {
+      gamedevelopment: "gamedev",
+      ue5: "unrealengine",
+      godotengine: "godot",
+      unity3d: "unity",
+    };
+
     // Step 3: Filter streams by desired tags
     const priorityTags = ["d2jam"];
-    const desiredTags = [
-      "d2jam",
-      "ludumdare",
-      "gamejam",
-      "gamedev",
-      "gamedevelopment",
-    ];
+    const desiredTags = ["d2jam", "gamejam", "gamedev"];
     const streamers = await db.user.findMany({
       where: {
         twitch: {
@@ -69,7 +70,29 @@ export async function updateFeaturedStreamers() {
       streamer.twitch?.toLowerCase()
     );
 
-    const filteredStreams = streams.filter((stream) => {
+    const normalizedStreams = streams.map((stream) => {
+      if (!stream.tags) {
+        stream.tags = [];
+      }
+
+      if (stream.game_id === "509660") {
+        stream.tags.push("art");
+      } else if (stream.game_id === "66082") {
+        stream.tags.push("games");
+      } else if (stream.game_id === "1599346425") {
+        stream.tags.push("coworking");
+      }
+
+      if (stream.tags) {
+        const seen = new Set<string>();
+        stream.tags = stream.tags
+          .map((tag) => tagSynonyms[tag.toLowerCase()] || tag.toLowerCase())
+          .filter((tag) => (seen.has(tag) ? false : seen.add(tag)));
+      }
+      return stream;
+    });
+
+    const filteredStreams = normalizedStreams.filter((stream) => {
       if (!stream.tags) return false; // Skip streams without tags
       if (stream.language !== "en") return false; // Skip non-English streams
       return stream.tags.some((tag) => desiredTags.includes(tag.toLowerCase()));
@@ -83,7 +106,7 @@ export async function updateFeaturedStreamers() {
         return (
           Math.log10(b.viewer_count + 1) -
           Math.log10(a.viewer_count + 1) +
-          (Math.random() - 0.5) // Small random offset
+          (Math.random() - 0.5) * 2 // Small random offset
         );
       });
 
@@ -98,7 +121,7 @@ export async function updateFeaturedStreamers() {
         return (
           Math.log10(b.viewer_count + 1) -
           Math.log10(a.viewer_count + 1) +
-          (Math.random() - 0.5) // Small random offset
+          (Math.random() - 0.5) * 2 // Small random offset
         );
       });
 
@@ -113,7 +136,7 @@ export async function updateFeaturedStreamers() {
         return (
           Math.log10(b.viewer_count + 1) -
           Math.log10(a.viewer_count + 1) +
-          (Math.random() - 0.5) // Small random offset
+          (Math.random() - 0.5) * 2 // Small random offset
         );
       })
       .slice(0, 3);
@@ -138,11 +161,7 @@ export async function updateFeaturedStreamers() {
             .replace("{width}", "480")
             .replace("{height}", "270"),
           streamTitle: stream.title,
-          streamTags: stream.tags
-            ? ([
-                ...new Set(stream.tags.map((tag) => tag.toLowerCase())),
-              ] as string[])
-            : [],
+          streamTags: stream.tags,
           viewerCount: stream.viewer_count,
         },
       });
