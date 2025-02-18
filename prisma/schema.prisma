@@ -44,6 +44,7 @@ model User {
   scores            Score[]           @relation(name: "ScoreToUser")
   ghosts            Ghost[]           @relation(name: "GhostToUser")
   data              Data[]            @relation(name: "DataToUser")
+  events            Event[]
 }
 
 enum Priority {
@@ -146,10 +147,36 @@ model Jam {
 
 
   // Relations
-  games             Game[]    @relation(name: "GameToEvent")
+  games             Game[]            @relation(name: "GameToEvent")
   users             User[]
   themeSuggestions  ThemeSuggestion[] @relation(name: "SuggestionToEvent")
-  themeVotes        ThemeVote[] @relation(name: "VoteToEvent")
+  themeVotes        ThemeVote[]       @relation(name: "VoteToEvent")
+}
+
+model Event {
+  id          Int           @id @default(autoincrement())
+  slug        String        @unique
+  name        String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  startTime   DateTime      
+  endTime     DateTime      
+
+  // Relations
+  category    EventCategory @relation(fields: [categoryId], references: [id])
+  categoryId  Int
+  host        User          @relation(fields: [hostId], references: [id])
+  hostId      Int
+}
+
+model EventCategory {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relation
+  events      Event[]
 }
 
 model Game {
