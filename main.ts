@@ -34,7 +34,6 @@ app.use(express.json());
 
 app.use("/api/v1", v1);
 
-updateFeaturedStreamers();
 cron.schedule("*/5 * * * *", async () => {
   console.log("Running updateFeaturedStreamers...");
   try {

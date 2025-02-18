@@ -6,7 +6,7 @@ import { Request, Response, NextFunction } from "express";
  */
 function authUser(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers["authorization"];
-  const refreshToken = req.cookies["refreshToken"];
+  const refreshToken = req.cookies["refreshToken"] || req.headers["refresh"];
   const accessToken = authHeader && authHeader.split(" ")[1];
 
   if (!accessToken || !refreshToken) {
