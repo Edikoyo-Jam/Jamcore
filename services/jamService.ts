@@ -12,8 +12,8 @@ export const getCurrentActiveJam = async () => {
 
   // Get current time in UTC
   const now = new Date().toISOString();
-  console.log("Current UTC time:", now);
-  console.log("Number of active jams:", jams.length);
+  // console.log("Current UTC time:", now);
+  // console.log("Number of active jams:", jams.length);
 
   let futureJam = null;
 
@@ -51,23 +51,23 @@ export const getCurrentActiveJam = async () => {
       new Date(jammingEnd).getTime() + jam.ratingHours * 60 * 60 * 1000
     ).toISOString();
 
-    console.log("Phase times (UTC):");
-    console.log("Start of Suggestions:", startOfSuggestionsTime);
-    console.log("End of Suggestions:", suggestionEnd);
-    console.log("End of Slaughter:", slaughterEnd);
-    console.log("End of Voting:", votingEnd);
-    console.log("End of Jamming:", jammingEnd);
-    console.log("End of Rating:", ratingEnd);
-    console.log("=======");
+    // console.log("Phase times (UTC):");
+    // console.log("Start of Suggestions:", startOfSuggestionsTime);
+    // console.log("End of Suggestions:", suggestionEnd);
+    // console.log("End of Slaughter:", slaughterEnd);
+    // console.log("End of Voting:", votingEnd);
+    // console.log("End of Jamming:", jammingEnd);
+    // console.log("End of Rating:", ratingEnd);
+    // console.log("=======");
 
     i++;
-    console.log(i);
+    //console.log(i);
     if (now < ratingEnd) {
-      console.log("checking  " + jam.id);
+      //console.log("checking  " + jam.id);
       if (!futureJam || jam.startTime < futureJam.startTime) {
         if (futureJam) console.log("from " + futureJam.id);
         futureJam = jam;
-        console.log("future jam changed to " + jam.id);
+        //console.log("future jam changed to " + jam.id);
       } else continue;
     }
 
