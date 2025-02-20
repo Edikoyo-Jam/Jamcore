@@ -1,4 +1,4 @@
-import express from "express";
+import express, {Response, Request} from "express";
 import { PrismaClient } from "@prisma/client";
 import { getCurrentActiveJam } from "../../../services/jamService";
 
@@ -20,7 +20,8 @@ router.post("/create", async function (req, res) {
     } = req.body;
   
     if (!name || !slug || !userSlug) { // Validate that userSlug is provided
-      return res.status(400).send("Missing required fields or user not logged in.");
+      res.status(400).send("Missing required fields or user not logged in.");
+      return;
     }
   
     try {
@@ -30,13 +31,15 @@ router.post("/create", async function (req, res) {
       });
   
       if (!user) {
-        return res.status(401).send("User not found.");
+        res.status(401).send("User not found.");
+        return;
       }
   
       // Get current active jam
       const activeJam = await getCurrentActiveJam();
       if (!activeJam || !activeJam.futureJam) {
-        return res.status(404).send("No active jam found.");
+        res.status(404).send("No active jam found.");
+        return;
       }
   
       // Create game with download links and contributors
@@ -76,7 +79,8 @@ router.post("/create", async function (req, res) {
     const { name, slug, description, thumbnail, downloadLinks, contributors } = req.body;
   
     if (!name || !description) {
-      return res.status(400).send("Name and description are required.");
+      res.status(400).send("Name and description are required.");
+      return;
     }
   
     try {
@@ -87,7 +91,8 @@ router.post("/create", async function (req, res) {
       });
   
       if (!existingGame) {
-        return res.status(404).send("Game not found.");
+         res.status(404).send("Game not found.");
+         return;
       }
   
       // Determine which contributors to add and which to remove
@@ -95,10 +100,10 @@ router.post("/create", async function (req, res) {
       const newContributorIds = contributors;
   
       const contributorsToAdd = newContributorIds.filter(
-        (id) => !existingContributorIds.includes(id)
+        (id: number) => !existingContributorIds.includes(id)
       );
       const contributorsToRemove = existingContributorIds.filter(
-        (id) => !newContributorIds.includes(id)
+        (id: number) => !newContributorIds.includes(id)
       );
   
       // Update the game
@@ -117,8 +122,8 @@ router.post("/create", async function (req, res) {
             })),
           },
           contributors: {
-            connect: contributorsToAdd.map((id) => ({ id })),
-            disconnect: contributorsToRemove.map((id) => ({ id })),
+            connect: contributorsToAdd.map((id: number) => ({ id })),
+            disconnect: contributorsToRemove.map((id: number) => ({ id })),
           },
         },
         include: {
@@ -129,7 +134,7 @@ router.post("/create", async function (req, res) {
   
       // Update contributedGames for added contributors
       await Promise.all(
-        contributorsToAdd.map((id) =>
+        contributorsToAdd.map((id: number) =>
           prisma.user.update({
             where: { id },
             data: {
@@ -177,7 +182,8 @@ router.get("/:gameSlug", async function (req, res) {
     });
     
     if (!game) {
-      return res.status(404).send("Game not found");
+      res.status(404).send("Game not found");
+      return;
     }
     
     res.json(game);
@@ -188,7 +194,8 @@ router.get("/:gameSlug", async function (req, res) {
     const { contributorIds } = req.body; // Array of contributor IDs
   
     if (!contributorIds || !Array.isArray(contributorIds)) {
-      return res.status(400).send("Invalid contributor IDs.");
+      res.status(400).send("Invalid contributor IDs.");
+      return;
     }
   
     try {
@@ -198,7 +205,8 @@ router.get("/:gameSlug", async function (req, res) {
       });
   
       if (!game) {
-        return res.status(404).send("Game not found.");
+        res.status(404).send("Game not found.");
+        return;
       }
   
       // Update contributors for the game
@@ -240,7 +248,8 @@ router.get("/:gameSlug", async function (req, res) {
     const { contributorIds } = req.body; // Array of contributor IDs
   
     if (!contributorIds || !Array.isArray(contributorIds)) {
-      return res.status(400).send("Invalid contributor IDs.");
+      res.status(400).send("Invalid contributor IDs.");
+      return;
     }
   
     try {
@@ -250,7 +259,8 @@ router.get("/:gameSlug", async function (req, res) {
       });
   
       if (!game) {
-        return res.status(404).send("Game not found.");
+        res.status(404).send("Game not found.");
+        return;
       }
   
       // Update contributors for the game
@@ -287,6 +297,43 @@ router.get("/:gameSlug", async function (req, res) {
     }
   });
 
-  
+  router.get("/", async function(req: Request, res: Response) {
+    const { sort } = req.query;
+    let orderBy = {};
+    
+    switch (sort) {
+      case "oldest":
+        orderBy = { id: "asc" };
+        break;
+      case "newest":
+          orderBy = { id: "desc" };
+          break;
+      case "top":
+        orderBy = { scores: { _count: "desc" }};
+        break;
+      case "bottom":
+          orderBy = { scores: { _count: "asc" }};
+          break;    
+      default:
+        orderBy = { id: "desc" };
+        break;
+    }
+      
+    const game = await prisma.game.findMany({
+      include: {
+        author: true,
+        contributors: true,
+        jam: true
+      },
+      orderBy
+    });
+    
+    if (!game) {
+      res.status(404).send("No Games where not found");
+      return;
+    }
+    
+    res.json(game);
+  });
 
 export default router;
