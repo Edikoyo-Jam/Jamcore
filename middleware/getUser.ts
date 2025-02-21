@@ -40,7 +40,7 @@ async function getUser(
   });
 
   if (!user) {
-    res.status(401).send("User missing.");
+    res.status(404).send("User missing.");
     return;
   }
 
