@@ -7,6 +7,7 @@ To run you can first set environment variables for the database in a .env file
 POSTGRES_USER=jammer
 POSTGRES_PASSWORD=INSERTPASSWORDHERE
 POSTGRES_DB=jamcore
+TOKEN_SECRET=RANDOMSTRINGHERE
 ```
 
 And then run
