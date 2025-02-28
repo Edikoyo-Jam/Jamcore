@@ -1,42 +1,58 @@
 import express from "express";
 
-import post from "./post/index.js";
-import posts from "./posts/posts.js";
-import user from "./user/index.js";
-import self from "./self/self.js";
-import jams from "./jams/jams.js";
-import joinJam from "./join-jam/join-jam.js";
-import like from "./like/like.js";
-import streamers from "./streamers/streamers.js";
-import session from "./session/index.js";
-import tags from "./tags/tags.js";
-import themes from "./themes/themes.js";
-import mod from "./mod/mod.js";
-import games from "./games/games.js";
-import comment from "./comment/comment.js";
-import image from "./image/index.js";
+import { readdirSync } from "fs";
+import { fileURLToPath, pathToFileURL } from "url";
+import path from "path";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+import posts from "./posts/get.js";
 
 var router = express.Router();
 
-router.use("/user", user);
-router.use("/session", session);
-router.use("/post", post);
-router.use("/image", image);
+function loadRoutes(dir: string, routePath: string) {
+  const files = readdirSync(dir, { withFileTypes: true });
 
-router.use("/posts", posts);
-router.use("/self", self);
-router.use("/jams", jams);
-router.use("/join-jam", joinJam);
-router.use("/like", like);
-router.use("/streamers", streamers);
-router.use("/tags", tags);
-router.use("/themes", themes);
-router.use("/games", games);
-router.use("/mod", mod);
-router.use("/comment", comment);
+  for (const file of files) {
+    if (file.isDirectory()) {
+      loadRoutes(
+        path.join(file.path, file.name),
+        path.join(routePath, file.name)
+      );
+    } else {
+      if (file.name == "v1.ts" || file.name == "index.ts") {
+        continue;
+      }
 
-router.get("/", function (req, res) {
-  res.send("API v1 Route");
-});
+      import(pathToFileURL(path.join(file.path, file.name)).href).then(
+        (module) => {
+          if (!module.default) {
+            console.log(
+              `Route ${path.join(routePath, file.name)} has no default export`
+            );
+            return;
+          }
+
+          const method = file.name.replace(".ts", "").toLowerCase();
+
+          if (!["get", "post", "put", "delete"].includes(method)) {
+            console.log(
+              `Route ${path.join(
+                routePath,
+                file.name
+              )} is not a rest api method`
+            );
+            return;
+          }
+
+          router.use(routePath.replace("\\", "/"), module.default);
+          console.log(`Loaded route: ${path.join(routePath, file.name)}`);
+        }
+      );
+    }
+  }
+}
+
+loadRoutes(__dirname, "/");
 
 export default router;

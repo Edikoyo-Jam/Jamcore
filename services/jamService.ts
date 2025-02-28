@@ -91,7 +91,7 @@ export const getCurrentActiveJam = async () => {
 };
 
 export const checkJamParticipation = async (req, res, next) => {
-  const username = req.user.username; // From your auth middleware
+  const username = res.locals.userSlug; // From your auth middleware
 
   try {
     // Get active jam

@@ -8,9 +8,11 @@ var router = express.Router();
 
 router.post(
   "/",
+
   authUser,
   getUser,
   getPostOrComment,
+
   async function (_req, res) {
     const { user, post, comment } = res.locals;
     const thingKey = post ? "postId" : "commentId";
@@ -39,7 +41,7 @@ router.post(
       });
     }
 
-    res.send("Like created");
+    res.send({ message: "Like created" });
   }
 );
 

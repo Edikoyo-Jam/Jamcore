@@ -14,7 +14,7 @@ router.get(
   authenticateUser,
   checkJamParticipation,
   async function (req, res) {
-    const username = req.user.username;
+    const username = res.locals.userSlug;
 
     // Find the user
     const user = await prisma.user.findUnique({
@@ -53,7 +53,7 @@ router.get(
   authenticateUser,
   checkJamParticipation,
   async (req, res) => {
-    const username = req.user.username;
+    const username = res.locals.userSlug;
 
     const user = await prisma.user.findUnique({ where: { slug: username } });
     if (!user) return res.status(401).send("Unauthorized");
@@ -111,7 +111,7 @@ router.delete(
   checkJamParticipation,
   async function (req, res) {
     const suggestionId = parseInt(req.params.id);
-    const username = req.user.username;
+    const username = res.locals.userSlug;
 
     // Find the user
     const user = await prisma.user.findUnique({
@@ -154,7 +154,7 @@ router.put(
   async function (req, res) {
     const suggestionId = parseInt(req.params.id);
     const { suggestionText } = req.body;
-    const username = req.user.username;
+    const username = res.locals.userSlug;
 
     if (!suggestionText) {
       return res.status(400).send("Suggestion text is required.");
@@ -207,7 +207,7 @@ router.post(
     }
 
     // Extract username from authenticated user
-    const username = req.user.username;
+    const username = res.locals.userSlug;
     console.log("Authenticated Username:", username);
 
     // Find the user in the database
@@ -274,7 +274,7 @@ router.get(
   authenticateUser,
   checkJamParticipation,
   async (req, res) => {
-    const username = req.user.username;
+    const username = res.locals.userSlug;
 
     const user = await prisma.user.findUnique({
       where: { slug: username },
@@ -327,7 +327,7 @@ router.post(
   authenticateUser,
   checkJamParticipation,
   async (req, res) => {
-    const username = req.user.username;
+    const username = res.locals.userSlug;
     const { suggestionId, voteType } = req.body;
 
     if (!suggestionId || !voteType) {
@@ -421,7 +421,7 @@ router.put(
   authenticateUser,
   checkJamParticipation,
   async (req, res) => {
-    const username = req.user.username;
+    const username = res.locals.userSlug;
     const { voteType } = req.body; // voteType can be "YES", "NO", or "SKIP"
     const voteId = parseInt(req.params.id);
 
@@ -513,7 +513,7 @@ router.get(
   authenticateUser,
   checkJamParticipation,
   async (req, res) => {
-    const username = req.user.username;
+    const username = res.locals.userSlug;
 
     const user = await prisma.user.findUnique({
       where: { slug: username },
@@ -553,7 +553,7 @@ router.post(
   authenticateUser,
   checkJamParticipation,
   async (req, res) => {
-    const username = req.user.username;
+    const username = res.locals.userSlug;
     const { suggestionId, votingScore } = req.body;
 
     if (!suggestionId || votingScore === undefined) {

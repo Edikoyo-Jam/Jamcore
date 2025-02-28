@@ -1,17 +1,28 @@
-import express from "express";
+import { Router } from "express";
+import authUser from "@middleware/authUser";
+import rateLimit from "@middleware/rateLimit";
 
-var router = express.Router();
+const router = Router();
 
-// TODO: Clean up
+/**
+ * Route to delete a session from the database.
+ * Used for logging out.
+ */
+router.delete(
+  "/",
+  rateLimit(),
 
-router.delete("/", function (req, res) {
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    sameSite: "strict",
-    path: "/",
-  });
-  res.status(200);
-  res.send({ message: "Logged out successfully" });
-});
+  authUser,
+
+  async (_req, res) => {
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      sameSite: "strict",
+      path: "/",
+    });
+    res.status(200);
+    res.send({ message: "Logged out successfully" });
+  }
+);
 
 export default router;

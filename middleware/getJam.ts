@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import db from "../helper/db";
+import { getCurrentActiveJam } from "services/jamService";
 
 async function getJam(
   req: Request,
@@ -8,8 +9,18 @@ async function getJam(
 ): Promise<void> {
   const { jamId } = req.body;
 
+  // If no jam id provided gets the current jam
   if (!jamId) {
-    res.status(502).send("Jam id missing.");
+    const activeJam = await getCurrentActiveJam();
+
+    if (!activeJam) {
+      res.status(404).json({ message: "No active jams found" });
+      return;
+    }
+
+    res.locals.jam = activeJam.futureJam;
+    res.locals.jamPhase = activeJam.phase;
+    next();
     return;
   }
 
