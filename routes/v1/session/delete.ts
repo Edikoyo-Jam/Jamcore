@@ -12,8 +12,6 @@ router.delete(
   "/",
   rateLimit(),
 
-  authUser,
-
   async (_req, res) => {
     res.clearCookie("refreshToken", {
       httpOnly: true,
