@@ -6,7 +6,8 @@ import path from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import posts from "./posts/get.js";
+import games from "./games/games.js";
+import themes from "./themes/themes.js";
 
 var router = express.Router();
 
@@ -15,10 +16,7 @@ function loadRoutes(dir: string, routePath: string) {
 
   for (const file of files) {
     if (file.isDirectory()) {
-      loadRoutes(
-        path.join(file.path, file.name),
-        path.join(routePath, file.name)
-      );
+      loadRoutes(path.join(file.path, file.name), routePath + "/" + file.name);
     } else {
       if (file.name == "v1.ts" || file.name == "index.ts") {
         continue;
@@ -45,7 +43,7 @@ function loadRoutes(dir: string, routePath: string) {
             return;
           }
 
-          router.use(routePath.replace("\\", "/"), module.default);
+          router.use(routePath, module.default);
           console.log(`Loaded route: ${path.join(routePath, file.name)}`);
         }
       );
@@ -53,6 +51,9 @@ function loadRoutes(dir: string, routePath: string) {
   }
 }
 
-loadRoutes(__dirname, "/");
+router.use("/games", games);
+router.use("/themes", themes);
+
+loadRoutes(__dirname, "");
 
 export default router;
