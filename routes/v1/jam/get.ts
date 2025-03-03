@@ -15,7 +15,8 @@ router.get(
   getJam,
 
   async (_req, res) => {
-    logger.info(`Jam with id ${res.locals.jam.id} fetched`);
+    // if no jam found it crashes the container
+    res.locals.jam && logger.info(`Jam with id ${res.locals.jam.id} fetched`);
     res.send({
       message: "Jam fetched",
       data: { jam: res.locals.jam, phase: res.locals.jamPhase },

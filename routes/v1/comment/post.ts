@@ -9,7 +9,7 @@ const router = Router();
 /**
  * Route to create a comment.
  */
-router.get(
+router.post(
   "/",
   rateLimit(),
 
