@@ -5,6 +5,8 @@ import {
   checkJamParticipation,
 } from "../../../services/jamService";
 import authenticateUser from "../../../middleware/authUser";
+import getUser from "@middleware/getUser";
+import getJam from "@middleware/getJam";
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -43,63 +45,6 @@ router.get(
       res.json(suggestions);
     } catch (error) {
       console.error("Error fetching suggestions:", error);
-      res.status(500).send("Internal Server Error.");
-    }
-  }
-);
-
-router.get(
-  "/random",
-  authenticateUser,
-  checkJamParticipation,
-  async (req, res) => {
-    const username = res.locals.userSlug;
-
-    const user = await prisma.user.findUnique({ where: { slug: username } });
-    if (!user) return res.status(401).send("Unauthorized");
-
-    const activeJam = await getCurrentActiveJam();
-    if (!activeJam || !activeJam.futureJam)
-      return res.status(404).send("No active jam found.");
-
-    try {
-      // Fetch all eligible suggestion IDs
-      const eligibleSuggestions = await prisma.themeSuggestion.findMany({
-        where: {
-          jamId: activeJam.futureJam.id,
-          id: {
-            notIn: (
-              await prisma.themeVote.findMany({
-                where: {
-                  userId: user.id,
-                  jamId: activeJam.futureJam.id,
-                },
-                select: { themeSuggestionId: true },
-              })
-            ).map((vote) => vote.themeSuggestionId),
-          },
-        },
-        select: { id: true }, // Only fetch IDs to reduce data transfer
-      });
-
-      if (eligibleSuggestions.length === 0) {
-        return res.status(404).send("No suggestions left to vote on.");
-      }
-
-      // Pick a random ID from the list
-      const randomIndex = Math.floor(
-        Math.random() * eligibleSuggestions.length
-      );
-      const randomSuggestionId = eligibleSuggestions[randomIndex].id;
-
-      // Fetch the full suggestion details for the randomly selected ID
-      const randomSuggestion = await prisma.themeSuggestion.findUnique({
-        where: { id: randomSuggestionId },
-      });
-
-      res.json(randomSuggestion);
-    } catch (error) {
-      console.error("Error fetching random suggestion:", error);
       res.status(500).send("Internal Server Error.");
     }
   }
@@ -267,181 +212,62 @@ router.post(
 
 /// SLAUGHTER VOTES
 
-router.get(
-  "/voteSlaughter",
-  authenticateUser,
-  checkJamParticipation,
-  async (req, res) => {
-    const username = res.locals.userSlug;
-
-    const user = await prisma.user.findUnique({
-      where: { slug: username },
-    });
-
-    if (!user) {
-      return res.status(401).send("Unauthorized: User not found.");
-    }
-
-    // Get the current active jam
-    const activeJam = await getCurrentActiveJam();
-    if (!activeJam || !activeJam.futureJam) {
-      return res.status(404).send("No active jam found.");
-    }
-
-    // Check phase
-    if (activeJam.phase !== "Elimination") {
-      return res.status(403).send("Elimination phase is not active");
-    }
-
-    try {
-      // Fetch all votes for the current jam and include related theme suggestions
-      const votes = await prisma.themeVote.findMany({
-        where: {
-          userId: user.id,
-          jamId: activeJam.futureJam.id,
-        },
-        include: {
-          themeSuggestion: true, // Include related theme suggestion details
-        },
-      });
-
-      const formattedVotes = votes.map((vote) => ({
-        id: vote.themeSuggestion.id,
-        suggestion: vote.themeSuggestion.suggestion,
-        slaughterScore: vote.slaughterScore,
-        userId: vote.userId, // Include userId
-      }));
-
-      res.json(formattedVotes);
-    } catch (error) {
-      console.error("Error fetching voted themes:", error);
-      res.status(500).send("Internal Server Error.");
-    }
-  }
-);
-
 router.post(
   "/voteSlaughter",
   authenticateUser,
+  getUser,
+  getJam,
   checkJamParticipation,
   async (req, res) => {
-    const username = res.locals.userSlug;
     const { suggestionId, voteType } = req.body;
 
-    if (!suggestionId || !voteType) {
-      return res.status(400).send("Missing required fields.");
+    if (!suggestionId || voteType == null) {
+      res.status(400).send("Missing required fields.");
+      return;
     }
 
-    // Find the user
-    const user = await prisma.user.findUnique({
-      where: { slug: username },
-    });
-
-    if (!user) {
-      return res.status(401).send("Unauthorized: User not found.");
-    }
-
-    // Get the current active jam
-    const activeJam = await getCurrentActiveJam();
-    if (!activeJam || !activeJam.futureJam) {
-      return res.status(404).send("No active jam found.");
+    if (voteType != -1 && voteType != 0 && voteType != 1) {
+      res.status(400).send("Invalid vote type.");
+      return;
     }
 
     // Check phase
-    if (activeJam.phase !== "Elimination") {
-      return res.status(403).send("Elimination phase is not active");
+    if (res.locals.jamPhase !== "Elimination") {
+      res.status(403).send("Elimination phase is not active");
+      return;
     }
 
     try {
       // Check if the user already voted on this suggestion
       let existingVote = await prisma.themeVote.findFirst({
         where: {
-          userId: user.id,
-          jamId: activeJam.futureJam.id,
+          userId: res.locals.user.id,
+          jamId: res.locals.jam.id,
           themeSuggestionId: suggestionId,
         },
       });
 
-      let slaughterScoreChange =
-        voteType === "YES" ? +1 : voteType === "NO" ? -1 : 0;
-
       if (existingVote) {
-        // Update existing vote and calculate score difference
-        const scoreDifference =
-          slaughterScoreChange - existingVote.slaughterScore;
-
         await prisma.themeVote.update({
           where: { id: existingVote.id },
-          data: { slaughterScore: slaughterScoreChange },
+          data: { slaughterScore: voteType },
         });
+
+        res.json({ message: "Edited vote successfully." });
       } else {
-        // Create a new vote record in ThemeVote table
         await prisma.themeVote.create({
           data: {
-            slaughterScore: slaughterScoreChange,
-            userId: user.id,
-            jamId: activeJam.futureJam.id,
-            themeSuggestionId: suggestionId, // Link vote to theme suggestion
+            slaughterScore: voteType,
+            userId: res.locals.user.id,
+            jamId: res.locals.jam.id,
+            themeSuggestionId: suggestionId,
           },
         });
 
-      res.json({ message: "Vote recorded successfully." });
+        res.json({ message: "Vote recorded successfully." });
+      }
     } catch (error) {
       console.error("Error voting on suggestion:", error);
-      res.status(500).send("Internal Server Error.");
-    }
-  }
-);
-
-router.put(
-  "/voteSlaughter/:id",
-  authenticateUser,
-  checkJamParticipation,
-  async (req, res) => {
-    const username = res.locals.userSlug;
-    const { voteType } = req.body; // voteType can be "YES", "NO", or "SKIP"
-    const voteId = parseInt(req.params.id);
-
-    if (!voteType || isNaN(voteId)) {
-      return res.status(400).send("Missing required fields.");
-    }
-
-    // Find the user
-    const user = await prisma.user.findUnique({
-      where: { slug: username },
-    });
-
-    if (!user) {
-      return res.status(401).send("Unauthorized: User not found.");
-    }
-
-    try {
-      // Fetch existing vote
-      const existingVote = await prisma.themeVote.findUnique({
-        where: { id: voteId },
-      });
-
-      if (!existingVote || existingVote.userId !== user.id) {
-        return res.status(403).send("Unauthorized to update this vote.");
-      }
-
-      // Determine new slaughterScore based on voteType
-      let newSlaughterScore = 0;
-      if (voteType === "YES") newSlaughterScore = +1;
-      else if (voteType === "NO") newSlaughterScore = -1;
-
-      // Calculate the difference between old and new slaughter scores
-      const scoreDifference = newSlaughterScore - existingVote.slaughterScore;
-
-      // Update ThemeVote record
-      await prisma.themeVote.update({
-        where: { id: voteId },
-        data: { slaughterScore: newSlaughterScore },
-      });
-      
-      res.json({ message: "Vote updated successfully." });
-    } catch (error) {
-      console.error("Error updating vote:", error);
       res.status(500).send("Internal Server Error.");
     }
   }
