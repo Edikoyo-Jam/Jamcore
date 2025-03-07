@@ -35,12 +35,6 @@ async function main() {
           themeSuggestionId: theme.id,
           slaughterScore,
         });
-
-        // Track totalSlaughterScore updates for each theme
-        if (!themeUpdates[theme.id]) {
-          themeUpdates[theme.id] = 0;
-        }
-        themeUpdates[theme.id] += slaughterScore;
       }
     }
   }
@@ -51,19 +45,6 @@ async function main() {
     data: votes,
     skipDuplicates: true, // Avoid duplicates if re-seeding
   });
-
-  // Update totalSlaughterScore for each theme
-  console.log("Updating totalSlaughterScores...");
-  for (const [themeId, scoreChange] of Object.entries(themeUpdates)) {
-    await prisma.themeSuggestion.update({
-      where: { id: parseInt(themeId) },
-      data: {
-        totalSlaughterScore: {
-          increment: scoreChange,
-        },
-      },
-    });
-  }
 
   console.log("Seeding random slaughter votes completed!");
 }

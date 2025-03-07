@@ -74,7 +74,7 @@ export const getCurrentActiveJam = async () => {
     if (now >= startOfSuggestionsTime && now < suggestionEnd)
       return { phase: "Suggestion", futureJam };
     if (now >= suggestionEnd && now < slaughterEnd)
-      return { phase: "Survival", futureJam };
+      return { phase: "Elimination", futureJam };
     if (now >= slaughterEnd && now < votingEnd)
       return { phase: "Voting", futureJam };
     if (now >= votingEnd && now < jammingEnd)

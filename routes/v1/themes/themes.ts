@@ -254,8 +254,6 @@ router.post(
           suggestion: suggestionText,
           userId: user.id,
           jamId: activeJam.futureJam.id,
-          totalSlaughterScore: 0,
-          totalVotingScore: 0,
         },
       });
 
@@ -291,8 +289,8 @@ router.get(
     }
 
     // Check phase
-    if (activeJam.phase !== "Survival") {
-      return res.status(403).send("Slaughter phase is not active");
+    if (activeJam.phase !== "Elimination") {
+      return res.status(403).send("Elimination phase is not active");
     }
 
     try {
@@ -350,8 +348,8 @@ router.post(
     }
 
     // Check phase
-    if (activeJam.phase !== "Survival") {
-      return res.status(403).send("Slaughter phase is not active");
+    if (activeJam.phase !== "Elimination") {
+      return res.status(403).send("Elimination phase is not active");
     }
 
     try {
@@ -376,16 +374,6 @@ router.post(
           where: { id: existingVote.id },
           data: { slaughterScore: slaughterScoreChange },
         });
-
-        // Update totalSlaughterScore in ThemeSuggestion table
-        await prisma.themeSuggestion.update({
-          where: { id: suggestionId },
-          data: {
-            totalSlaughterScore: {
-              increment: scoreDifference,
-            },
-          },
-        });
       } else {
         // Create a new vote record in ThemeVote table
         await prisma.themeVote.create({
@@ -396,17 +384,6 @@ router.post(
             themeSuggestionId: suggestionId, // Link vote to theme suggestion
           },
         });
-
-        // Update totalSlaughterScore in ThemeSuggestion table
-        await prisma.themeSuggestion.update({
-          where: { id: suggestionId },
-          data: {
-            totalSlaughterScore: {
-              increment: slaughterScoreChange,
-            },
-          },
-        });
-      }
 
       res.json({ message: "Vote recorded successfully." });
     } catch (error) {
@@ -461,17 +438,7 @@ router.put(
         where: { id: voteId },
         data: { slaughterScore: newSlaughterScore },
       });
-
-      // Update totalSlaughterScore in ThemeSuggestion table
-      await prisma.themeSuggestion.update({
-        where: { id: existingVote.jamId }, // Use the suggestion ID linked to the vote
-        data: {
-          totalSlaughterScore: {
-            increment: scoreDifference, // Adjust the score by the difference
-          },
-        },
-      });
-
+      
       res.json({ message: "Vote updated successfully." });
     } catch (error) {
       console.error("Error updating vote:", error);
@@ -489,17 +456,20 @@ router.get("/top-themes", async (req, res) => {
   }
 
   // Check phase
-  if (activeJam.phase == "Suggestion" || activeJam.phase == "Survival") {
+  if (activeJam.phase == "Suggestion" || activeJam.phase == "Elimination") {
     return res.status(403).send("Voting phase is not active");
   }
 
   try {
     // Fetch top N themes without user votes
-    const topThemes = await prisma.themeSuggestion.findMany({
-      where: { jamId: activeJam.futureJam.id },
-      orderBy: { totalSlaughterScore: "desc" },
-      take: activeJam.futureJam.themePerRound || 10,
-    });
+    // const topThemes = await prisma.themeSuggestion.findMany({
+    //   where: { jamId: activeJam.futureJam.id },
+    //   orderBy: { totalSlaughterScore: "desc" },
+    //   take: activeJam.futureJam.themePerRound || 10,
+    // });
+
+    const topThemes = {};
+    // TODO: Add new topthemes functionality
 
     res.json(topThemes);
   } catch (error) {
