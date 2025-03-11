@@ -45,6 +45,12 @@ model User {
   ghosts            Ghost[]           @relation(name: "GhostToUser")
   data              Data[]            @relation(name: "DataToUser")
   events            Event[]
+  primaryRoles      TeamRole[]        @relation(name: "PrimaryRolesToUsers")
+  secondaryRoles    TeamRole[]        @relation(name: "SecondaryRolesToUsers")
+  teams             Team[]
+  ownedTeams        Team[]            @relation(name: "TeamsToOwner")
+  teamApplications  TeamApplication[] @relation(name: "TeamApplicationsToUser")
+  teamInvites       TeamInvite[]      @relation(name: "TeamInvitesToUser")
 }
 
 enum Priority {
@@ -147,10 +153,11 @@ model Jam {
 
 
   // Relations
-  games             Game[]            @relation(name: "GameToEvent")
+  games             Game[]            @relation(name: "GameToJam")
   users             User[]
-  themeSuggestions  ThemeSuggestion[] @relation(name: "SuggestionToEvent")
-  themeVotes        ThemeVote[]       @relation(name: "VoteToEvent")
+  themeSuggestions  ThemeSuggestion[] @relation(name: "SuggestionToJam")
+  themeVotes        ThemeVote[]       @relation(name: "VoteToJam")
+  teams             Team[]            @relation(name: "TeamsToJam")
 }
 
 model Event {
@@ -192,7 +199,7 @@ model Game {
   author        User      @relation(fields: [authorId], references: [id], name: "GameToAuthor")
   authorId      Int
   contributors  User[]    @relation("ContributedGames")
-  jam           Jam       @relation(fields: [jamId], references: [id], name: "GameToEvent")
+  jam           Jam       @relation(fields: [jamId], references: [id], name: "GameToJam")
   jamId         Int
   reports       Report[]  @relation(name: "ReportToGame")
   downloadLinks GameDownloadLink[] @relation(name: "LinkToGame")
@@ -318,23 +325,80 @@ model ThemeSuggestion {
   // Relations
   createdBy        	    User      @relation(fields: [userId], references: [id], name: "SuggestionToUser")
   userId                Int
-  createdFor         	  Jam       @relation(fields: [jamId], references: [id], name: "SuggestionToEvent")
+  createdFor         	  Jam       @relation(fields: [jamId], references: [id], name: "SuggestionToJam")
   jamId                 Int
   votes                 ThemeVote[]
 }
 
 
 model ThemeVote {
-  id                Int       @id @default(autoincrement())
-  slaughterScore    Int       @default(0)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime?  @updatedAt
+  id                Int             @id @default(autoincrement())
+  slaughterScore    Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime?       @updatedAt
 
   // Relations
   user        	    User            @relation(fields: [userId], references: [id], name: "VoteToUser")
   userId            Int
-  jam         	    Jam             @relation(fields: [jamId], references: [id], name: "VoteToEvent")
+  jam         	    Jam             @relation(fields: [jamId], references: [id], name: "VoteToJam")
   jamId             Int
   themeSuggestion   ThemeSuggestion @relation(fields: [themeSuggestionId], references: [id])
   themeSuggestionId Int
+}
+
+
+model Team {
+  id                Int               @id @default(autoincrement())
+  applicationsOpen  Boolean           @default(false)
+  rolesWanted       TeamRole[]
+
+  // Relations
+  owner        	    User              @relation(fields: [ownerId], references: [id], name: "TeamsToOwner")
+  ownerId           Int
+  users             User[]
+  jam         	    Jam               @relation(fields: [jamId], references: [id], name: "TeamsToJam")
+  jamId             Int
+  invites           TeamInvite[]      @relation(name: "TeamInvitesToTeam")
+  applications      TeamApplication[] @relation(name: "TeamApplicationsToTeam")
+}
+
+
+model TeamRole {
+  id                Int         @id @default(autoincrement())
+  slug              String
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime?   @updatedAt
+
+  // Relations
+  primaryUsers      User[]      @relation(name: "PrimaryRolesToUsers")
+  secondaryUsers    User[]      @relation(name: "SecondaryRolesToUsers")
+  wantedBy          Team[]
+}
+
+
+model TeamInvite {
+  id                Int         @id @default(autoincrement())
+  content           String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime?   @updatedAt
+
+  //Relations
+  team              Team        @relation(fields: [teamId], references: [id], name: "TeamInvitesToTeam")
+  teamId            Int         @unique
+  user              User        @relation(fields: [userId], references: [id], name: "TeamInvitesToUser")
+  userId            Int         @unique
+}
+
+
+model TeamApplication {
+  id                Int         @id @default(autoincrement())
+  content           String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime?   @updatedAt
+
+  //Relations
+  team              Team        @relation(fields: [teamId], references: [id], name: "TeamApplicationsToTeam")
+  teamId            Int         @unique
+  user              User        @relation(fields: [userId], references: [id], name: "TeamApplicationsToUser")
+  userId            Int         @unique
 }
