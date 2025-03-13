@@ -157,10 +157,13 @@ model Event {
   id          Int           @id @default(autoincrement())
   slug        String        @unique
   name        String
+  content     String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   startTime   DateTime      
   endTime     DateTime      
+  link        String?
+  icon        String?
 
   // Relations
   category    EventCategory @relation(fields: [categoryId], references: [id])
