@@ -20,9 +20,9 @@ router.post(
   assertUserModOrUserStreamer,
 
   async function (req, res) {
-    const { title, content, start, end } = req.body;
+    const { title, content, start, end, link, icon } = req.body;
 
-    if (!title || !content || !start || !end) {
+    if (!title || !start || !end) {
       res.status(400);
       res.send();
       return;
@@ -50,10 +50,13 @@ router.post(
       data: {
         name: title,
         slug,
+        content: content ? content : null,
         startTime: parseZonedDateTime(start).toDate(),
         endTime: parseZonedDateTime(end).toDate(),
         hostId: res.locals.user.id,
         categoryId: 1,
+        link: link ? link : null,
+        icon: icon ? icon : null,
       },
     });
 
