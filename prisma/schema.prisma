@@ -40,6 +40,7 @@ model User {
   createdReports    Report[]          @relation(name: "ReportToReporter")
   themeSuggestions  ThemeSuggestion[] @relation(name: "SuggestionToUser")
   themeVotes        ThemeVote[]       @relation(name: "VoteToUser")
+  themeVotes2       ThemeVote2[]      @relation(name: "Vote2ToUser")
   tracks            Track[]           @relation(name: "TrackToComposer")
   scores            Score[]           @relation(name: "ScoreToUser")
   ghosts            Ghost[]           @relation(name: "GhostToUser")
@@ -151,6 +152,7 @@ model Jam {
   users             User[]
   themeSuggestions  ThemeSuggestion[] @relation(name: "SuggestionToEvent")
   themeVotes        ThemeVote[]       @relation(name: "VoteToEvent")
+  themeVotes2       ThemeVote2[]      @relation(name: "Vote2ToEvent")
 }
 
 model Event {
@@ -324,6 +326,7 @@ model ThemeSuggestion {
   createdFor         	  Jam       @relation(fields: [jamId], references: [id], name: "SuggestionToEvent")
   jamId                 Int
   votes                 ThemeVote[]
+  votes2                ThemeVote2[]
 }
 
 
@@ -337,6 +340,23 @@ model ThemeVote {
   user        	    User            @relation(fields: [userId], references: [id], name: "VoteToUser")
   userId            Int
   jam         	    Jam             @relation(fields: [jamId], references: [id], name: "VoteToEvent")
+  jamId             Int
+  themeSuggestion   ThemeSuggestion @relation(fields: [themeSuggestionId], references: [id])
+  themeSuggestionId Int
+}
+
+
+model ThemeVote2 {
+  id                Int       @id @default(autoincrement())
+  voteScore         Int
+  voteRound         Int
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime?  @updatedAt
+
+  // Relations
+  user        	    User            @relation(fields: [userId], references: [id], name: "Vote2ToUser")
+  userId            Int
+  jam         	    Jam             @relation(fields: [jamId], references: [id], name: "Vote2ToEvent")
   jamId             Int
   themeSuggestion   ThemeSuggestion @relation(fields: [themeSuggestionId], references: [id])
   themeSuggestionId Int

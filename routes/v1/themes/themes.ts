@@ -273,36 +273,68 @@ router.post(
   }
 );
 
-// THEME VOTING
+router.post(
+  "/voteVoting",
+  authenticateUser,
+  getUser,
+  getJam,
+  checkJamParticipation,
+  async (req, res) => {
+    const { suggestionId, voteType } = req.body;
 
-router.get("/top-themes", async (req, res) => {
-  const activeJam = await getCurrentActiveJam();
-  if (!activeJam || !activeJam.futureJam) {
-    return res.status(404).send("No active jam found.");
+    if (!suggestionId || voteType == null) {
+      res.status(400).send("Missing required fields.");
+      return;
+    }
+
+    if (voteType != 1 && voteType != 0 && voteType != 3) {
+      res.status(400).send("Invalid vote type.");
+      return;
+    }
+
+    // Check phase
+    if (res.locals.jamPhase !== "Voting") {
+      res.status(403).send("Voting phase is not active");
+      return;
+    }
+
+    try {
+      // Check if the user already voted on this suggestion
+      let existingVote = await prisma.themeVote2.findFirst({
+        where: {
+          userId: res.locals.user.id,
+          jamId: res.locals.jam.id,
+          themeSuggestionId: suggestionId,
+          voteRound: 1,
+        },
+      });
+
+      if (existingVote) {
+        await prisma.themeVote2.update({
+          where: { id: existingVote.id },
+          data: { voteScore: voteType },
+        });
+
+        res.json({ message: "Edited vote successfully." });
+      } else {
+        await prisma.themeVote2.create({
+          data: {
+            voteScore: voteType,
+            voteRound: 1,
+            userId: res.locals.user.id,
+            jamId: res.locals.jam.id,
+            themeSuggestionId: suggestionId,
+          },
+        });
+
+        res.json({ message: "Vote recorded successfully." });
+      }
+    } catch (error) {
+      console.error("Error voting on suggestion:", error);
+      res.status(500).send("Internal Server Error.");
+    }
   }
-
-  // Check phase
-  if (activeJam.phase == "Suggestion" || activeJam.phase == "Elimination") {
-    return res.status(403).send("Voting phase is not active");
-  }
-
-  try {
-    // Fetch top N themes without user votes
-    // const topThemes = await prisma.themeSuggestion.findMany({
-    //   where: { jamId: activeJam.futureJam.id },
-    //   orderBy: { totalSlaughterScore: "desc" },
-    //   take: activeJam.futureJam.themePerRound || 10,
-    // });
-
-    const topThemes = {};
-    // TODO: Add new topthemes functionality
-
-    res.json(topThemes);
-  } catch (error) {
-    console.error("Error fetching top themes:", error);
-    res.status(500).send("Internal Server Error.");
-  }
-});
+);
 
 router.get(
   "/votes",
