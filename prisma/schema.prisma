@@ -40,6 +40,7 @@ model User {
   createdReports    Report[]          @relation(name: "ReportToReporter")
   themeSuggestions  ThemeSuggestion[] @relation(name: "SuggestionToUser")
   themeVotes        ThemeVote[]       @relation(name: "VoteToUser")
+  themeVotes2       ThemeVote2[]      @relation(name: "Vote2ToUser")
   tracks            Track[]           @relation(name: "TrackToComposer")
   scores            Score[]           @relation(name: "ScoreToUser")
   ghosts            Ghost[]           @relation(name: "GhostToUser")
@@ -157,6 +158,7 @@ model Jam {
   users             User[]
   themeSuggestions  ThemeSuggestion[] @relation(name: "SuggestionToJam")
   themeVotes        ThemeVote[]       @relation(name: "VoteToJam")
+  themeVotes2       ThemeVote2[]      @relation(name: "Vote2ToJam")
   teams             Team[]            @relation(name: "TeamsToJam")
 }
 
@@ -164,10 +166,13 @@ model Event {
   id          Int           @id @default(autoincrement())
   slug        String        @unique
   name        String
+  content     String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   startTime   DateTime      
   endTime     DateTime      
+  link        String?
+  icon        String?
 
   // Relations
   category    EventCategory @relation(fields: [categoryId], references: [id])
@@ -328,6 +333,7 @@ model ThemeSuggestion {
   createdFor         	  Jam       @relation(fields: [jamId], references: [id], name: "SuggestionToJam")
   jamId                 Int
   votes                 ThemeVote[]
+  votes2                ThemeVote2[]
 }
 
 
@@ -401,4 +407,20 @@ model TeamApplication {
   teamId            Int         @unique
   user              User        @relation(fields: [userId], references: [id], name: "TeamApplicationsToUser")
   userId            Int         @unique
+}
+
+model ThemeVote2 {
+  id                Int       @id @default(autoincrement())
+  voteScore         Int
+  voteRound         Int
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime?  @updatedAt
+
+  // Relations
+  user        	    User            @relation(fields: [userId], references: [id], name: "Vote2ToUser")
+  userId            Int
+  jam         	    Jam             @relation(fields: [jamId], references: [id], name: "Vote2ToJam")
+  jamId             Int
+  themeSuggestion   ThemeSuggestion @relation(fields: [themeSuggestionId], references: [id])
+  themeSuggestionId Int
 }
