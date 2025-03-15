@@ -12,8 +12,6 @@ async function getUser(
 ): Promise<void> {
   const { userSlug } = res.locals;
 
-  console.log(userSlug);
-
   if (!userSlug) {
     res.status(502).send("User slug missing.");
     return;
@@ -36,6 +34,8 @@ async function getUser(
       bannerPicture: true,
       email: true,
       twitch: true,
+      primaryRoles: true,
+      secondaryRoles: true,
     },
   });
 
