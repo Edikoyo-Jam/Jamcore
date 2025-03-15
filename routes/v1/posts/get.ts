@@ -1,8 +1,7 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
 import { PostTime } from "../../../types/PostTimes";
+import db from "@helper/db";
 
-const prisma = new PrismaClient();
 var router = express.Router();
 
 type WhereType = {
@@ -90,7 +89,7 @@ router.get(
       orderBy = { likes: { _count: "desc" } };
     }
 
-    const posts = await prisma.post.findMany({
+    const posts = await db.post.findMany({
       take: 20,
       where: {
         ...where,
@@ -125,7 +124,7 @@ router.get(
 
     let userId = null;
     if (user) {
-      const userRecord = await prisma.user.findUnique({
+      const userRecord = await db.user.findUnique({
         where: { slug: String(user) },
       });
       userId = userRecord ? userRecord.id : null;

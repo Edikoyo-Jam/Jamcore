@@ -34,6 +34,8 @@ async function getUser(
       bannerPicture: true,
       email: true,
       twitch: true,
+      primaryRoles: true,
+      secondaryRoles: true,
     },
   });
 

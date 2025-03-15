@@ -44,6 +44,8 @@ async function getTargetUser(
         admin: true,
         jams: true,
         bannerPicture: true,
+        primaryRoles: true,
+        secondaryRoles: true,
       },
     });
   } else {
@@ -62,6 +64,8 @@ async function getTargetUser(
         admin: true,
         jams: true,
         bannerPicture: true,
+        primaryRoles: true,
+        secondaryRoles: true,
       },
     });
   }

@@ -26,7 +26,15 @@ router.put(
   assertUserModOrUserTargetUser,
 
   async (req, res) => {
-    const { email, profilePicture, bannerPicture, bio, name } = req.body;
+    const {
+      email,
+      profilePicture,
+      bannerPicture,
+      bio,
+      name,
+      primaryRoles,
+      secondaryRoles,
+    } = req.body;
 
     try {
       const user = await db.user.update({
@@ -51,6 +59,22 @@ router.put(
           admin: true,
           jams: true,
           bannerPicture: true,
+        },
+      });
+
+      await db.user.update({
+        where: { id: user.id },
+        data: {
+          primaryRoles: {
+            connect: primaryRoles.map((roleSlug: string) => ({
+              slug: roleSlug,
+            })),
+          },
+          secondaryRoles: {
+            connect: secondaryRoles.map((roleSlug: string) => ({
+              slug: roleSlug,
+            })),
+          },
         },
       });
 
