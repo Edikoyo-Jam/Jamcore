@@ -357,6 +357,7 @@ model Team {
   id                Int               @id @default(autoincrement())
   applicationsOpen  Boolean           @default(false)
   rolesWanted       TeamRole[]
+  description       String?
 
   // Relations
   owner        	    User              @relation(fields: [ownerId], references: [id], name: "TeamsToOwner")
@@ -393,9 +394,9 @@ model TeamInvite {
 
   //Relations
   team              Team        @relation(fields: [teamId], references: [id], name: "TeamInvitesToTeam")
-  teamId            Int         @unique
+  teamId            Int         
   user              User        @relation(fields: [userId], references: [id], name: "TeamInvitesToUser")
-  userId            Int         @unique
+  userId            Int         
 }
 
 
@@ -407,9 +408,9 @@ model TeamApplication {
 
   //Relations
   team              Team        @relation(fields: [teamId], references: [id], name: "TeamApplicationsToTeam")
-  teamId            Int         @unique
+  teamId            Int         
   user              User        @relation(fields: [userId], references: [id], name: "TeamApplicationsToUser")
-  userId            Int         @unique
+  userId            Int         
 }
 
 model ThemeVote2 {

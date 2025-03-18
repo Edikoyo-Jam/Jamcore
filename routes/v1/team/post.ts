@@ -16,12 +16,13 @@ router.post(
   getJam,
 
   async (_req, res) => {
-    const { user, jam } = res.locals;
-
-    db.team.create({
+    await db.team.create({
       data: {
-        owner: user,
-        jam,
+        ownerId: res.locals.user.id,
+        jamId: res.locals.jam.id,
+        users: {
+          connect: { id: res.locals.user.id },
+        },
       },
     });
 

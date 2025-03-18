@@ -59,18 +59,38 @@ router.put(
           admin: true,
           jams: true,
           bannerPicture: true,
+          primaryRoles: { select: { slug: true } },
+          secondaryRoles: { select: { slug: true } },
         },
       });
+
+      const currentPrimaryRoles = user.primaryRoles.map((role) => role.slug);
+      const currentSecondaryRoles = user.secondaryRoles.map(
+        (role) => role.slug
+      );
+
+      const primaryRolesToDisconnect = currentPrimaryRoles.filter(
+        (role) => !primaryRoles.includes(role)
+      );
+      const secondaryRolesToDisconnect = currentSecondaryRoles.filter(
+        (role) => !secondaryRoles.includes(role)
+      );
 
       await db.user.update({
         where: { id: user.id },
         data: {
           primaryRoles: {
+            disconnect: primaryRolesToDisconnect.map((slug) => ({
+              slug,
+            })),
             connect: primaryRoles.map((roleSlug: string) => ({
               slug: roleSlug,
             })),
           },
           secondaryRoles: {
+            disconnect: secondaryRolesToDisconnect.map((slug) => ({
+              slug,
+            })),
             connect: secondaryRoles.map((roleSlug: string) => ({
               slug: roleSlug,
             })),

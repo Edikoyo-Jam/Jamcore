@@ -36,6 +36,25 @@ async function getUser(
       twitch: true,
       primaryRoles: true,
       secondaryRoles: true,
+      teams: true,
+      teamInvites: {
+        include: {
+          team: {
+            include: {
+              owner: true,
+            },
+          },
+        },
+      },
+      ownedTeams: {
+        include: {
+          applications: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      },
     },
   });
 
