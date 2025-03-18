@@ -7,7 +7,7 @@ import getUser from "@middleware/getUser";
 const router = Router();
 
 /**
- * Route to delete an invite
+ * Route to delete an application
  */
 router.delete(
   "/",
@@ -19,18 +19,18 @@ router.delete(
   async (req, res) => {
     const { accept, inviteId } = req.body;
 
-    const invite = await db.teamInvite.findUnique({
+    const invite = await db.teamApplication.findUnique({
       where: {
         id: inviteId,
       },
     });
 
     if (!invite) {
-      res.status(401).send({ message: "Invalid invite" });
+      res.status(401).send({ message: "Invalid application" });
       return;
     }
 
-    await db.teamInvite.delete({
+    await db.teamApplication.delete({
       where: {
         id: inviteId,
       },
@@ -42,14 +42,14 @@ router.delete(
         data: {
           users: {
             connect: {
-              id: res.locals.user.id,
+              id: invite.userId,
             },
           },
         },
       });
     }
 
-    res.send({ message: "Invite accepted" });
+    res.send({ message: "Application accepted" });
   }
 );
 

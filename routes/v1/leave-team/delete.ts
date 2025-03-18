@@ -5,7 +5,8 @@ import getTargetTeam from "@middleware/getTargetTeam";
 import rateLimit from "@middleware/rateLimit";
 import db from "@helper/db";
 import logger from "@helper/logger";
-import assertUserModOrUserTargetTeamOwner from "@middleware/assertUserModOrUserTargetTeamOwner";
+import assertUserNotTargetTeamOwner from "@middleware/assertUserNotTargetTeamOwner";
+import assertUserIsInTargetTeam from "@middleware/assertUserIsInTargetTeam";
 
 var router = express.Router();
 
@@ -16,21 +17,26 @@ router.delete(
   authUser,
   getUser,
   getTargetTeam,
-  assertUserModOrUserTargetTeamOwner,
+  assertUserIsInTargetTeam,
+  assertUserNotTargetTeamOwner,
 
   async (_req, res) => {
     try {
-      await db.team.delete({
+      await db.team.update({
         where: {
           id: res.locals.targetTeam.id,
         },
+        data: {
+          users: {
+            disconnect: { id: res.locals.user.id },
+          },
+        },
       });
 
-      logger.info(`Deleted team with id ${res.locals.targetTeam.id}`);
-      res.status(200).send({ message: "Team deleted" });
+      res.status(200).send({ message: "Left team" });
     } catch (error) {
       logger.error("Failed to delete team: ", error);
-      res.status(500).send({ message: "Failed to delete team" });
+      res.status(500).send({ message: "Failed to leave team" });
     }
   }
 );

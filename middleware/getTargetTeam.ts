@@ -26,6 +26,11 @@ async function getTargetTeam(
     where: {
       id: idnumber,
     },
+    include: {
+      users: true,
+      invites: true,
+      applications: true,
+    },
   });
 
   if (!team) {

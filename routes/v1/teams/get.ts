@@ -1,6 +1,7 @@
 import { Router } from "express";
 import rateLimit from "@middleware/rateLimit";
 import db from "@helper/db";
+import getTargetUserOptional from "@middleware/getTargetUserOptional";
 
 const router = Router();
 
@@ -11,13 +12,50 @@ router.get(
   "/",
   rateLimit(),
 
+  getTargetUserOptional,
+
   async (_req, res) => {
-    const teams = await db.team.findMany({
-      include: {
-        users: true,
-        owner: true,
-      },
-    });
+    let teams;
+
+    if (res.locals.targetUser) {
+      teams = await db.team.findMany({
+        where: {
+          users: {
+            some: {
+              id: res.locals.targetUser.id,
+            },
+          },
+        },
+        include: {
+          users: {
+            include: {
+              primaryRoles: true,
+              secondaryRoles: true,
+            },
+          },
+          owner: true,
+          rolesWanted: true,
+          invites: {
+            include: {
+              user: true,
+            },
+          },
+          applications: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      });
+    } else {
+      teams = await db.team.findMany({
+        include: {
+          users: true,
+          owner: true,
+          rolesWanted: true,
+        },
+      });
+    }
 
     res.send({ message: "Teams fetched", data: teams });
   }
