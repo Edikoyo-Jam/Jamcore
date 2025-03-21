@@ -298,6 +298,15 @@ router.post(
       return;
     }
 
+    if (
+      res.locals.jam &&
+      res.locals.jam &&
+      new Date(res.locals.jam.startTime).getTime() - new Date().getTime() <=
+        60 * 60 * 1000
+    ) {
+      return res.status(400).send("Voting is closed.");
+    }
+
     try {
       // Check if the user already voted on this suggestion
       let existingVote = await prisma.themeVote2.findFirst({
