@@ -33,8 +33,6 @@ model User {
   posts             Post[]            @relation(name: "PostToAuthor")
   likes             Like[]
   comments          Comment[]
-  ownedGames        Game[]            @relation(name: "GameToAuthor")
-  contributedGames  Game[]            @relation(name: "ContributedGames")
   jams              Jam[]
   reports           Report[]          @relation(name: "ReportToUser")
   createdReports    Report[]          @relation(name: "ReportToReporter")
@@ -52,6 +50,7 @@ model User {
   ownedTeams        Team[]            @relation(name: "TeamsToOwner")
   teamApplications  TeamApplication[] @relation(name: "TeamApplicationsToUser")
   teamInvites       TeamInvite[]      @relation(name: "TeamInvitesToUser")
+  ratings           Rating[]          @relation(name: "RatingToUser")
 }
 
 enum Priority {
@@ -191,27 +190,61 @@ model EventCategory {
   events      Event[]
 }
 
+enum GameCategory {
+  REGULAR
+  ODA
+}
+
 model Game {
-  id            Int       @id @default(autoincrement())
-  slug          String    @unique
-  name          String
-  description   String?
-  thumbnail     String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                Int                 @id @default(autoincrement())
+  slug              String              @unique
+  name              String
+  description       String?
+  thumbnail         String?
+  category          GameCategory
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  ratingCategories  RatingCategory[]    
 
   // Relations
-  author        User      @relation(fields: [authorId], references: [id], name: "GameToAuthor")
-  authorId      Int
-  contributors  User[]    @relation("ContributedGames")
-  jam           Jam       @relation(fields: [jamId], references: [id], name: "GameToJam")
-  jamId         Int
-  reports       Report[]  @relation(name: "ReportToGame")
-  downloadLinks GameDownloadLink[] @relation(name: "LinkToGame")
-  tracks        Track[]   @relation(name: "TrackToGame")
-  scores        Score[]   @relation(name: "ScoreToGame")
-  ghosts        Ghost[]   @relation(name: "GhostToGame")
-  data          Data[]    @relation(name: "DataToGame")
+  team              Team                @relation(fields: [teamId], references: [id], name: "GameToTeam")
+  teamId            Int                 @unique
+  jam               Jam                 @relation(fields: [jamId], references: [id], name: "GameToJam")
+  jamId             Int
+  reports           Report[]            @relation(name: "ReportToGame")
+  downloadLinks     GameDownloadLink[]  @relation(name: "LinkToGame")
+  tracks            Track[]             @relation(name: "TrackToGame")
+  scores            Score[]             @relation(name: "ScoreToGame")
+  ghosts            Ghost[]             @relation(name: "GhostToGame")
+  data              Data[]              @relation(name: "DataToGame")
+  ratings           Rating[]            @relation(name: "RatingToGame")
+}
+
+model RatingCategory {
+  id            Int                 @id @default(autoincrement())
+  name          String
+  description   String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  // Relations
+  ratings       Rating[]            @relation("RatingToCategory")
+  games         Game[]
+}
+
+model Rating {
+  id            Int                 @id @default(autoincrement())
+  value         Int
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  // Relations
+  category      RatingCategory      @relation(fields: [categoryId], references: [id], name: "RatingToCategory")
+  categoryId    Int
+  user          User                @relation(fields: [userId], references: [id], name: "RatingToUser")
+  userId        Int
+  game          Game                @relation(fields: [gameId], references: [id], name: "RatingToGame")
+  gameId        Int 
 }
 
 model Track {
@@ -367,6 +400,7 @@ model Team {
   jamId             Int
   invites           TeamInvite[]      @relation(name: "TeamInvitesToTeam")
   applications      TeamApplication[] @relation(name: "TeamApplicationsToTeam")
+  game              Game?             @relation(name: "GameToTeam")
 }
 
 
