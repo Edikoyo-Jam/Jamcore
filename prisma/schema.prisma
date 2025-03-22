@@ -389,6 +389,7 @@ model ThemeVote {
 
 model Team {
   id                Int               @id @default(autoincrement())
+  name              String?
   applicationsOpen  Boolean           @default(false)
   rolesWanted       TeamRole[]
   description       String?
