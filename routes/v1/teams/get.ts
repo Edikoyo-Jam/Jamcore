@@ -33,6 +33,7 @@ router.get(
               secondaryRoles: true,
             },
           },
+          game: true,
           owner: true,
           rolesWanted: true,
           invites: {
@@ -53,6 +54,7 @@ router.get(
           users: true,
           owner: true,
           rolesWanted: true,
+          game: true,
         },
       });
     }

@@ -4,7 +4,6 @@ import getJam from "@middleware/getJam";
 import getUser from "@middleware/getUser";
 import rateLimit from "@middleware/rateLimit";
 import { Router } from "express";
-import { getCurrentActiveJam } from "services/jamService";
 
 const router = Router();
 
@@ -35,6 +34,10 @@ router.get(
             },
           },
           jamId: res.locals.jam.id,
+        },
+        include: {
+          downloadLinks: true,
+          ratingCategories: true,
         },
       });
 

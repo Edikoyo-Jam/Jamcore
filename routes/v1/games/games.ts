@@ -1,75 +1,31 @@
 import express, { Response, Request } from "express";
 import { PrismaClient } from "@prisma/client";
-import { getCurrentActiveJam } from "../../../services/jamService";
+import getJam from "@middleware/getJam";
 
 const prisma = new PrismaClient();
 var router = express.Router();
 
-router.post("/create", async function (req, res) {
-  const { name, slug, description, thumbnail, downloadLinks, userSlug } =
-    req.body;
+router.put("/:gameSlug", getJam, async function (req, res) {
+  const { gameSlug } = req.params;
+  const {
+    name,
+    slug,
+    description,
+    thumbnail,
+    downloadLinks,
+    category,
+    ratingCategories,
+  } = req.body;
 
-  if (!name || !slug || !userSlug) {
-    // Validate that userSlug is provided
-    res.status(400).send("Missing required fields or user not logged in.");
+  if (!name || !category) {
+    res.status(400).send("Name is required.");
     return;
   }
 
-  try {
-    // Get current user
-    const user = await prisma.user.findUnique({
-      where: { slug: userSlug },
-    });
-
-    if (!user) {
-      res.status(401).send("User not found.");
-      return;
-    }
-
-    // Get current active jam
-    const activeJam = await getCurrentActiveJam();
-    if (!activeJam || !activeJam.futureJam) {
-      res.status(404).send("No active jam found.");
-      return;
-    }
-
-    // Create game with download links and contributors
-    const game = await prisma.game.create({
-      data: {
-        name,
-        slug,
-        description,
-        thumbnail,
-        jamId: activeJam.futureJam.id,
-        downloadLinks: {
-          create: downloadLinks.map(
-            (link: { url: string; platform: string }) => ({
-              url: link.url,
-              platform: link.platform,
-            })
-          ),
-        },
-        teamId: 1,
-        category: "ODA",
-      },
-      include: {
-        downloadLinks: true,
-      },
-    });
-
-    res.status(201).json(game);
-  } catch (error) {
-    console.error("Error creating game:", error);
-    res.status(500).send("Internal server error.");
-  }
-});
-
-router.put("/:gameSlug", async function (req, res) {
-  const { gameSlug } = req.params;
-  const { name, slug, description, thumbnail, downloadLinks } = req.body;
-
-  if (!name || !description) {
-    res.status(400).send("Name and description are required.");
+  if (res.locals.jamPhase != "Rating" && res.locals.jamPhase != "Jamming") {
+    res
+      .status(400)
+      .send("Can't edit game outside of jamming and rating period.");
     return;
   }
 
@@ -77,12 +33,31 @@ router.put("/:gameSlug", async function (req, res) {
     // Find the existing game
     const existingGame = await prisma.game.findUnique({
       where: { slug: gameSlug },
+      include: {
+        ratingCategories: true,
+      },
     });
 
     if (!existingGame) {
       res.status(404).send("Game not found.");
       return;
     }
+
+    if (res.locals.jamPhase == "Rating" && existingGame.category != category) {
+      res.status(400).send("Can't update category outside of jamming period.");
+      return;
+    }
+
+    const currentRatingCategories = existingGame.ratingCategories;
+    const disconnectRatingCategories = currentRatingCategories.filter(
+      (category) => !ratingCategories.includes(category.id)
+    );
+    const newRatingCategories = ratingCategories.filter(
+      (category: number) =>
+        currentRatingCategories.filter(
+          (ratingCategory) => ratingCategory.id == category
+        ).length == 0
+    );
 
     // Update the game
     const updatedGame = await prisma.game.update({
@@ -101,6 +76,15 @@ router.put("/:gameSlug", async function (req, res) {
             })
           ),
         },
+        ratingCategories: {
+          disconnect: disconnectRatingCategories.map((categry) => ({
+            id: categry.id,
+          })),
+          connect: newRatingCategories.map((category: number) => ({
+            id: category,
+          })),
+        },
+        category,
       },
       include: {
         downloadLinks: true,
@@ -121,6 +105,11 @@ router.get("/:gameSlug", async function (req, res) {
     where: { slug: gameSlug },
     include: {
       downloadLinks: true,
+      team: {
+        include: {
+          users: true,
+        },
+      },
     },
   });
 

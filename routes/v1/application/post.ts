@@ -27,6 +27,14 @@ router.post(
   async (req, res) => {
     const { content } = req.body;
 
+    if (
+      res.locals.targetTeam.game &&
+      res.locals.targetTeam.game.category == "ODA"
+    ) {
+      res.status(401).send({ message: "That team is a part of O.D.A" });
+      return;
+    }
+
     await db.teamApplication.create({
       data: {
         userId: res.locals.user.id,
