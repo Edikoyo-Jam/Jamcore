@@ -15,6 +15,7 @@ router.put("/:gameSlug", getJam, async function (req, res) {
     downloadLinks,
     category,
     ratingCategories,
+    published,
   } = req.body;
 
   if (!name || !category) {
@@ -85,6 +86,7 @@ router.put("/:gameSlug", getJam, async function (req, res) {
           })),
         },
         category,
+        published,
       },
       include: {
         downloadLinks: true,
@@ -146,6 +148,9 @@ router.get("/", async function (req: Request, res: Response) {
   const game = await prisma.game.findMany({
     include: {
       jam: true,
+    },
+    where: {
+      published: true,
     },
     orderBy,
   });

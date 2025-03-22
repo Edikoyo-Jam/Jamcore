@@ -125,21 +125,28 @@ export async function updateFeaturedStreamers() {
         );
       });
 
-    const nonPriorityStreams = filteredStreams
-      .filter((stream) =>
-        stream.tags.every((tag) => !priorityTags.includes(tag.toLowerCase()))
-      )
-      .filter(
-        (stream) => !streamerNames.includes(stream.user_name.toLowerCase())
-      )
-      .sort((a, b) => {
-        return (
-          Math.log10(b.viewer_count + 1) -
-          Math.log10(a.viewer_count + 1) +
-          (Math.random() - 0.5) * 2 // Small random offset
-        );
-      })
-      .slice(0, 3);
+    const numStreams = priorityStreams.length + streamerStreams.length;
+    const nonPriorityStreams =
+      numStreams < 3
+        ? filteredStreams
+            .filter((stream) =>
+              stream.tags.every(
+                (tag) => !priorityTags.includes(tag.toLowerCase())
+              )
+            )
+            .filter(
+              (stream) =>
+                !streamerNames.includes(stream.user_name.toLowerCase())
+            )
+            .sort((a, b) => {
+              return (
+                Math.log10(b.viewer_count + 1) -
+                Math.log10(a.viewer_count + 1) +
+                (Math.random() - 0.5) * 2 // Small random offset
+              );
+            })
+            .slice(0, 3 - numStreams)
+        : [];
 
     // Step 4: Update database with filtered streams
     await prisma.featuredStreamer.deleteMany(); // Clear existing records

@@ -46,6 +46,7 @@ router.post(
       downloadLinks,
       category,
       ratingCategories,
+      published,
     } = req.body;
 
     try {
@@ -71,6 +72,7 @@ router.post(
           },
           teamId: res.locals.targetTeam.id,
           category,
+          published,
         },
         include: {
           downloadLinks: true,
