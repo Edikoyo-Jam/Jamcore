@@ -196,29 +196,30 @@ enum GameCategory {
 }
 
 model Game {
-  id                Int                 @id @default(autoincrement())
-  slug              String              @unique
-  name              String
-  description       String?
-  thumbnail         String?
-  category          GameCategory
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  ratingCategories  RatingCategory[]    
-  published         Boolean             @default(false)
+  id                  Int                 @id @default(autoincrement())
+  slug                String              @unique
+  name                String
+  description         String?
+  thumbnail           String?
+  category            GameCategory
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  ratingCategories    RatingCategory[]    
+  published           Boolean             @default(false)
+  themeJustification  String?
 
   // Relations
-  team              Team                @relation(fields: [teamId], references: [id], name: "GameToTeam")
-  teamId            Int                 @unique
-  jam               Jam                 @relation(fields: [jamId], references: [id], name: "GameToJam")
-  jamId             Int
-  reports           Report[]            @relation(name: "ReportToGame")
-  downloadLinks     GameDownloadLink[]  @relation(name: "LinkToGame")
-  tracks            Track[]             @relation(name: "TrackToGame")
-  scores            Score[]             @relation(name: "ScoreToGame")
-  ghosts            Ghost[]             @relation(name: "GhostToGame")
-  data              Data[]              @relation(name: "DataToGame")
-  ratings           Rating[]            @relation(name: "RatingToGame")
+  team                Team                @relation(fields: [teamId], references: [id], name: "GameToTeam")
+  teamId              Int                 @unique
+  jam                 Jam                 @relation(fields: [jamId], references: [id], name: "GameToJam")
+  jamId               Int
+  reports             Report[]            @relation(name: "ReportToGame")
+  downloadLinks       GameDownloadLink[]  @relation(name: "LinkToGame")
+  tracks              Track[]             @relation(name: "TrackToGame")
+  scores              Score[]             @relation(name: "ScoreToGame")
+  ghosts              Ghost[]             @relation(name: "GhostToGame")
+  data                Data[]              @relation(name: "DataToGame")
+  ratings             Rating[]            @relation(name: "RatingToGame")
 }
 
 model RatingCategory {

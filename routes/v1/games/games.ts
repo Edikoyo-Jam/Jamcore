@@ -16,6 +16,7 @@ router.put("/:gameSlug", getJam, async function (req, res) {
     category,
     ratingCategories,
     published,
+    themeJustification,
   } = req.body;
 
   if (!name || !category) {
@@ -87,6 +88,7 @@ router.put("/:gameSlug", getJam, async function (req, res) {
         },
         category,
         published,
+        themeJustification,
       },
       include: {
         downloadLinks: true,

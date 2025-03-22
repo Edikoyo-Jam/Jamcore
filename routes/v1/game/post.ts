@@ -47,6 +47,7 @@ router.post(
       category,
       ratingCategories,
       published,
+      themeJustification,
     } = req.body;
 
     try {
@@ -73,6 +74,7 @@ router.post(
           teamId: res.locals.targetTeam.id,
           category,
           published,
+          themeJustification,
         },
         include: {
           downloadLinks: true,
